@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>부(富) 숨기기 챌린지 😏 숨긴다고 숨겨지나 | 데일리 미니게임</title>
+<meta name="description" content="부라는 게 숨긴다고 숨겨지는 것도 아니고… 눈치왕 너구리가 보기 전에 재산을 숨겨라! 45초 챌린지">
+<meta property="og:title" content="부(富) 숨기기 챌린지 😏">
+<meta property="og:description" content="부라는 게 숨긴다고 숨겨지는 것도 아니고… 너는 얼마나 숨길 수 있어?">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💎</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#2b1f17;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#fff;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+#app{position:relative;max-width:480px;height:100%;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;background:#3a2a1f}
+#hud{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-weight:800;font-size:17px;background:rgba(0,0,0,.3)}
+#mute{background:none;border:0;font-size:22px;color:#fff;cursor:pointer}
+#wall{position:relative;height:30%;min-height:150px;background:linear-gradient(#f3e3c3,#e9d3a8);display:flex;align-items:flex-end;justify-content:center;border-bottom:8px solid #8a5a36}
+#wall::before{content:"";position:absolute;left:8%;top:18%;width:22%;height:40%;background:linear-gradient(#bfe6ff,#e8f7ff);border:6px solid #fff;border-radius:6px;box-shadow:0 2px 0 #c9b38a}
+#door{position:relative;width:120px;height:86%;background:#a46a3f;border:6px solid #6e4325;border-bottom:0;border-radius:8px 8px 0 0;overflow:hidden}
+#door .knob{position:absolute;right:12px;top:52%;width:12px;height:12px;border-radius:50%;background:#ffd36b}
+#door.warn{animation:rattle .12s infinite}
+@keyframes rattle{0%,100%{transform:translateX(0)}50%{transform:translateX(3px)}}
+#peeker{position:absolute;left:50%;bottom:-90px;transform:translateX(-50%);font-size:70px;transition:bottom .15s}
+#door.peek{background:#2a1a10}
+#door.peek #peeker{bottom:6px}
+#bubble{position:absolute;right:6%;top:12%;background:#fff;color:#222;font-weight:800;padding:8px 12px;border-radius:14px;font-size:15px;opacity:0;transition:opacity .15s;max-width:44%}
+#bubble.on{opacity:1}
+#floor{position:relative;flex:1;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(4,1fr);gap:8px;padding:12px;background:repeating-linear-gradient(90deg,#b07a4f 0 46px,#a26f46 46px 48px)}
+.cell{position:relative;display:flex;align-items:center;justify-content:center;border-radius:14px;background:rgba(0,0,0,.06)}
+.item{border:0;background:rgba(255,255,255,.18);border-radius:18px;width:92%;height:92%;font-size:44px;cursor:pointer;animation:pop .18s ease-out;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.item small{font-size:11px;font-weight:800;color:#fff;margin-top:4px;text-shadow:0 1px 2px #000}
+.item.spotted{outline:4px solid #ff4d6d}
+.item.poor{background:rgba(0,0,0,.12)}
+@keyframes pop{from{transform:scale(.3)}to{transform:scale(1)}}
+.fly{position:fixed;z-index:30;font-size:40px;pointer-events:none;transition:transform .35s ease-in,opacity .35s}
+#closet{display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:#5a3a24;font-weight:800;font-size:15px}
+#closet .box{font-size:34px}
+#flash{position:absolute;inset:0;pointer-events:none;background:#ff4d6d;opacity:0;transition:opacity .2s}
+#msg{position:absolute;left:0;right:0;top:44%;text-align:center;font-size:26px;font-weight:900;text-shadow:0 2px 8px rgba(0,0,0,.7);opacity:0;transition:opacity .15s;pointer-events:none;z-index:5}
+.overlay{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:rgba(40,26,18,.96)}
+.overlay.hidden{display:none}
+.overlay h1{font-size:28px;margin:10px 0 6px;line-height:1.3}
+.overlay p{opacity:.92;line-height:1.55;margin:6px 0;word-break:keep-all}
+.big{font-size:80px}
+.btn{display:inline-block;margin:8px 6px;padding:14px 22px;border-radius:999px;border:0;font-size:18px;font-weight:800;cursor:pointer;background:#ffd36b;color:#222}
+.btn.ghost{background:transparent;color:#fff;border:2px solid #fff}
+.score{font-size:clamp(28px,9vw,42px);font-weight:900;color:#ffd36b;margin:6px 0;white-space:nowrap}
+.small{font-size:13px;opacity:.7;margin-top:14px}
+.small a{color:#ffe2a8}
+#toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:#fff;color:#111;padding:10px 16px;border-radius:12px;font-weight:700;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud"><span id="time">⏱ 45</span><span id="score">₩0</span><span id="rumor">🗣️ 0/5</span><button id="mute" aria-label="소리 켜기">🔇</button></div>
+  <div id="wall"><div id="door"><div class="knob"></div><div id="peeker">🦝</div></div><div id="bubble"></div></div>
+  <div id="floor"></div>
+  <div id="closet"><span class="box">🗄️</span><span id="stash">비밀 금고: 0개</span></div>
+  <div id="flash"></div>
+  <div id="msg"></div>
+
+  <div class="overlay" id="start">
+    <div class="big">😏💎</div>
+    <h1>부(富) 숨기기 챌린지</h1>
+    <p>“부라는 게 숨긴다고<br>숨겨지는 것도 아니고…”</p>
+    <p>바닥에 자꾸 생기는 <b>재산 💎💵⌚</b>을 탭해서 금고에 숨기세요.<br>
+    👣 발소리가 나면 서두르고,<br><b>눈치왕 너구리 🦝가 볼 때는 손 떼기!</b><br>
+    🍜🧦 서민템은 그냥 보여줘도 돼요.</p>
+    <p>소문 🗣️ 5개 쌓이면 끝 · 45초</p>
+    <button class="btn" id="startBtn">탭해서 시작</button>
+    <p class="small"><a href="../../../">← 다른 미니게임 보기</a></p>
+  </div>
+
+  <div class="overlay hidden" id="result">
+    <div class="big" id="rEmoji">😏</div>
+    <h1 id="rTitle"></h1>
+    <div class="score" id="rScore">₩0</div>
+    <p id="rDetail"></p>
+    <div><button class="btn" id="shareBtn">📤 내 점수 공유하기</button></div>
+    <div><button class="btn ghost" id="retryBtn">🔁 다시 하기</button></div>
+    <p class="small">‘부라는 게 숨긴다고…’ 밈 패러디 원작 미니게임 · <a href="../../../">다른 게임 보기</a></p>
+  </div>
+  <div id="toast"></div>
+</div>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const qs=new URLSearchParams(location.search);
+const ROUND=Math.max(1,Math.min(120,Number(qs.get('dur'))||45));
+const PLAY_URL=location.origin+location.pathname;
+const RICH=[
+ {e:'🪙',n:'금화',v:1000,w:5},{e:'💵',n:'돈다발',v:3000,w:5},{e:'⌚',n:'명품시계',v:5000,w:3},
+ {e:'💍',n:'반지',v:8000,w:2},{e:'💎',n:'다이아',v:10000,w:2},{e:'👜',n:'명품백',v:7000,w:2},{e:'🏆',n:'한정판',v:20000,w:0.6}
+];
+const POOR=[{e:'🍜',n:'컵라면'},{e:'🧦',n:'구멍양말'},{e:'🧻',n:'휴지'},{e:'🥫',n:'참치캔'}];
+const LINES_WARN=['👣 저벅저벅…','👣 누가 온다…','👣 똑똑?'];
+const LINES_PEEK=['뭐 숨겨? 👀','너 요즘 뭐 해? 👀','어머 이게 다 뭐야 👀','수상한데… 👀'];
+let st='ready',won=0,stashN=0,rumor=0,timeLeft=ROUND,lastTs=0,spawnT=0,phase='away',phaseT=0,phaseDur=2.5,spotted=0,cells=[],poorTapped=0,peeks=0;
+let muted=true,ac=null;
+function beep(f,d=0.08,type='sine',v=0.07){if(muted)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+d);o.stop(ac.currentTime+d+0.02)}catch(e){}}
+$('mute').onclick=()=>{muted=!muted;$('mute').textContent=muted?'🔇':'🔊';beep(660)};
+function toast(t){const el=$('toast');el.textContent=t;el.style.opacity=1;clearTimeout(toast._t);toast._t=setTimeout(()=>el.style.opacity=0,1800)}
+function msg(t,c){const m=$('msg');m.textContent=t;m.style.color=c||'#fff';m.style.opacity=1;clearTimeout(msg._t);msg._t=setTimeout(()=>m.style.opacity=0,700)}
+function won2str(man){ // man = 만원 단위
+  if(man<=0)return '₩0';
+  const eok=Math.floor(man/10000),rest=man%10000;
+  return '₩'+(eok?eok+'억':'')+(rest?(eok?' ':'')+rest.toLocaleString()+'만':'')+'원';
+}
+function hud(){$('time').textContent='⏱ '+Math.ceil(timeLeft);$('score').textContent=won2str(won);$('rumor').textContent='🗣️ '+rumor+'/5';$('stash').textContent='비밀 금고: '+stashN+'개'}
+function build(){const f=$('floor');f.innerHTML='';cells=[];for(let i=0;i<12;i++){const c=document.createElement('div');c.className='cell';f.appendChild(c);cells.push({el:c,item:null})}}
+function pickRich(){const tot=RICH.reduce((s,r)=>s+r.w,0);let x=Math.random()*tot;for(const r of RICH){if((x-=r.w)<=0)return r}return RICH[0]}
+function spawn(){
+  const free=cells.filter(c=>!c.item);if(!free.length)return;
+  const c=free[Math.random()*free.length|0];
+  const poor=Math.random()<0.22;
+  const d=poor?POOR[Math.random()*POOR.length|0]:pickRich();
+  const b=document.createElement('button');b.className='item'+(poor?' poor':'');b.innerHTML=d.e+'<small>'+d.n+'</small>';
+  const it={d,poor,el:b,age:0};
+  b.addEventListener('pointerdown',ev=>{ev.preventDefault();tap(c)});
+  c.item=it;c.el.appendChild(b);
+}
+function removeItem(c){if(c.item){c.item.el.remove();c.item=null}}
+function tap(c){
+  if(st!=='play'||!c.item)return;
+  if(phase==='peek'){rumor++;msg('수상한 움직임! 🗣️+1','#ffb3c1');flash();beep(150,0.2,'sawtooth');hud();checkOver();return}
+  const it=c.item;
+  if(it.poor){poorTapped++;won=Math.max(0,won-2000);msg(it.d.e+' 서민템은 보여줘야지! -2천만','#ffe2a8');beep(220,0.1,'square',0.04);removeItem(c);hud();return}
+  won+=it.d.v;stashN++;
+  const r=it.el.getBoundingClientRect(),t=$('closet').getBoundingClientRect();
+  const fl=document.createElement('div');fl.className='fly';fl.textContent=it.d.e;fl.style.left=r.left+r.width/2-20+'px';fl.style.top=r.top+r.height/2-20+'px';document.body.appendChild(fl);
+  requestAnimationFrame(()=>{fl.style.transform=`translate(${t.left+t.width/2-(r.left+r.width/2)}px,${t.top-(r.top)}px) scale(.4)`;fl.style.opacity=0});
+  setTimeout(()=>fl.remove(),400);
+  removeItem(c);beep(500+Math.min(it.d.v/40,600),0.07,'triangle');hud();
+}
+function flash(){const f=$('flash');f.style.opacity=.35;setTimeout(()=>f.style.opacity=0,180);if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}}
+function setPhase(p){
+  phase=p;phaseT=0;const door=$('door'),bub=$('bubble');const el=ROUND-timeLeft;
+  door.classList.remove('warn','peek');bub.classList.remove('on');
+  if(p==='away'){phaseDur=Math.max(1.2,3.4-el*0.04)+Math.random()*1.2}
+  else if(p==='warn'){phaseDur=Math.max(0.55,1.0-el*0.008);door.classList.add('warn');bub.textContent=LINES_WARN[Math.random()*LINES_WARN.length|0];bub.classList.add('on');beep(180,0.06,'square',0.05)}
+  else if(p==='peek'){
+    phaseDur=1.1;peeks++;door.classList.add('peek');bub.textContent=LINES_PEEK[Math.random()*LINES_PEEK.length|0];bub.classList.add('on');
+    const seen=cells.filter(c=>c.item&&!c.item.poor);
+    if(seen.length){rumor+=seen.length;spotted+=seen.length;seen.forEach(c=>c.item.el.classList.add('spotted'));msg('들켰다! 🗣️+'+seen.length,'#ffb3c1');flash();beep(120,0.3,'sawtooth')}
+    else{msg('휴… 아무것도 없는 척 😇');beep(700,0.08,'triangle')}
+    hud();checkOver();
+  }
+}
+function checkOver(){if(rumor>=5){rumor=5;hud();setTimeout(end,350);st='ending'}}
+function loop(ts){
+  if(st!=='play')return;
+  const dt=Math.min(0.05,(ts-(lastTs||ts))/1000);lastTs=ts;
+  timeLeft-=dt;if(timeLeft<=0){timeLeft=0;hud();end();return}
+  phaseT+=dt;
+  if(phaseT>=phaseDur){
+    if(phase==='away')setPhase('warn');else if(phase==='warn')setPhase('peek');else{cells.forEach(c=>c.item&&c.item.el.classList.remove('spotted'));setPhase('away')}
+  }
+  if(st!=='play')return;
+  if(phase!=='peek'){
+    const el=ROUND-timeLeft;spawnT+=dt;const iv=Math.max(0.38,0.95-el*0.013);
+    if(spawnT>=iv){spawnT=0;spawn();if(el>20&&Math.random()<0.3)spawn()}
+  }
+  cells.forEach(c=>{if(c.item&&c.item.poor){c.item.age+=dt;if(c.item.age>2.6)removeItem(c)}});
+  $('time').textContent='⏱ '+Math.ceil(timeLeft);
+  requestAnimationFrame(loop);
+}
+function start(){
+  won=0;stashN=0;rumor=0;spotted=0;poorTapped=0;peeks=0;timeLeft=ROUND;lastTs=0;spawnT=0;
+  build();$('start').classList.add('hidden');$('result').classList.add('hidden');
+  st='play';setPhase('away');spawn();spawn();hud();requestAnimationFrame(loop);beep(440);
+}
+function end(){
+  if(st==='over')return;st='over';
+  $('door').classList.remove('warn','peek');$('bubble').classList.remove('on');
+  const caught=rumor>=5;let t,e;
+  if(caught){t='부라는 게 숨긴다고\n숨겨지는 것도 아니고 😏';e='🗣️'}
+  else if(won>=300000){t='재벌 3세급 은닉 실력';e='🤵'}
+  else if(won>=150000){t='조용한 알부자';e='💰'}
+  else if(won>=60000){t='소소한 비상금러';e='🐷'}
+  else{t='숨길 부가… 없었다';e='🍜'}
+  $('rTitle').innerText=t;$('rEmoji').textContent=e;$('rScore').textContent=won2str(won);
+  $('rDetail').textContent=caught?`소문이 다 났어요! 금고에 ${stashN}개 숨기다 들킴 · 너구리 방문 ${peeks}번`:`${ROUND}초 완전 은닉 성공! 금고 ${stashN}개 · 들킨 횟수 ${spotted}번`;
+  $('result').classList.remove('hidden');
+  window.__lastResult={won,stashN,rumor,caught};
+}
+async function share(){
+  const caught=rumor>=5;
+  const text=caught?`😏 부라는 게 숨긴다고 숨겨지는 것도 아니고… ${won2str(won)} 숨기다 들켰다! 너는 얼마나 숨길 수 있어?`:`😎 ${ROUND}초 동안 ${won2str(won)} 완전 은닉 성공 (${$('rTitle').innerText}) 부라는 게 숨긴다고… 숨겨지더라? 너도 해봐`;
+  const full=text+'\n'+PLAY_URL;
+  try{if(navigator.share){await navigator.share({title:'부(富) 숨기기 챌린지',text,url:PLAY_URL});return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(full);toast('복사됐어요! 친구에게 붙여넣기 📋')}
+  catch(e){const ta=document.createElement('textarea');ta.value=full;document.body.appendChild(ta);ta.select();let k=false;try{k=document.execCommand('copy')}catch(_){}ta.remove();toast(k?'복사됐어요! 📋':'주소를 직접 복사해 주세요: '+PLAY_URL)}
+}
+$('startBtn').addEventListener('click',start);
+$('start').addEventListener('click',e=>{if(e.target.tagName!=='A'&&st==='ready')start()});
+$('retryBtn').addEventListener('click',start);
+$('shareBtn').addEventListener('click',share);
+build();hud();
+window.__game={get state(){return st},get won(){return won},get phase(){return phase}};
+})();
+</script>
+</body>
+</html>

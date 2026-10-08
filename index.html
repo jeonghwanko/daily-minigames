@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>데일리 미니게임 🎮 오늘의 바이럴 소재로 만든 30초 게임</title>
+<meta name="description" content="매일 바이럴 소재 3개로 만드는 30~60초 미니게임 모음">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#14121c;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;line-height:1.5}
+main{max-width:520px;margin:0 auto;padding:28px 16px 48px}
+header h1{font-size:28px}
+header p{opacity:.75;margin-top:4px}
+.day{margin-top:28px}
+.day h2{font-size:16px;opacity:.7;margin-bottom:10px;font-weight:700}
+.card{display:flex;gap:14px;align-items:center;padding:14px;border-radius:18px;background:#221f2e;margin-bottom:10px;text-decoration:none;color:#fff;border:1px solid #2f2b40;transition:transform .1s}
+.card:active{transform:scale(.98)}
+.emo{font-size:40px;width:56px;height:56px;display:flex;align-items:center;justify-content:center;border-radius:14px;background:#2d2940;flex-shrink:0}
+.card b{display:block;font-size:17px}
+.card span{display:block;font-size:14px;opacity:.75}
+.card .tag{display:inline-block;margin-top:4px;font-size:11px;padding:2px 8px;border-radius:999px;background:#3a3550;opacity:1}
+footer{margin-top:36px;font-size:12px;opacity:.55}
+footer a{color:#c9b8ff}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>🎮 데일리 미니게임</h1>
+  <p>매일 바이럴 소재 3개로 만드는 30~60초 미니게임. 광고·추적 없음.</p>
+</header>
+<div id="list"></div>
+<footer>
+  모든 캐릭터·그래픽은 원작이며, 언급된 트렌드·브랜드와 제휴 관계가 없습니다.<br>
+  <a href="https://github.com/jeonghwanko/daily-minigames">GitHub</a> · 교육용 소스 공개 라이선스(상업적 이용 금지)
+</footer>
+</main>
+<script>
+// 최신 날짜가 위로. 새 날짜는 배열 맨 앞에 추가하세요.
+const DAYS=[
+  {date:'2026-10-08',games:[
+    {slug:'hide-the-wealth',emoji:'😏',title:'부(富) 숨기기 챌린지',hook:'부라는 게 숨긴다고 숨겨지는 것도 아니고… 너구리가 보기 전에 재산을 숨겨라',tag:'#부라는게숨긴다고 밈',sec:45},
+    {slug:'earphone-untangle',emoji:'🎧',title:'줄이어폰 엉킴 풀기',hook:'다시 힙해진 줄이어폰, 근데 왜 늘 엉켜있죠? 60초에 몇 개 풀까',tag:'#줄이어폰 리바이벌',sec:60},
+    {slug:'octopus-camo',emoji:'🐙',title:'문어 변장술',hook:'세계 문어의 날! 상어가 오기 전에 배경색으로 변장하라',tag:'#세계문어의날',sec:45}
+  ]}
+];
+const L=document.getElementById('list');
+const fmt=d=>{const [y,m,dd]=d.split('-');return `${y}년 ${+m}월 ${+dd}일`};
+DAYS.slice().sort((a,b)=>b.date.localeCompare(a.date)).forEach(day=>{
+  const s=document.createElement('section');s.className='day';
+  s.innerHTML=`<h2>${fmt(day.date)}</h2>`;
+  day.games.forEach(g=>{
+    const a=document.createElement('a');a.className='card';a.href=`games/${day.date}/${g.slug}/`;
+    a.innerHTML=`<div class="emo">${g.emoji}</div><div><b>${g.title}</b><span>${g.hook}</span><span class="tag">${g.tag} · ${g.sec}초</span></div>`;
+    s.appendChild(a);
+  });
+  L.appendChild(s);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>문어 변장술 🐙 상어 피하기 | 데일리 미니게임</title>
+<meta name="description" content="세계 문어의 날 기념! 상어가 오기 전에 몸 색을 바꿔라. 45초 변장 챌린지">
+<meta property="og:title" content="문어 변장술 🐙 45초 변장 챌린지">
+<meta property="og:description" content="상어가 오기 전에 배경색으로 변장! 너는 몇 점?">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐙</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#0b2340;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#fff;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+#app{position:relative;max-width:480px;height:100%;margin:0 auto;display:flex;flex-direction:column;overflow:hidden}
+#hud{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-weight:800;font-size:18px;background:rgba(0,0,0,.25);z-index:2}
+#hud .hearts{letter-spacing:2px}
+#mute{background:none;border:0;font-size:22px;color:#fff;cursor:pointer}
+#sea{position:relative;flex:1;transition:background-color .18s;background:#2d6a9f;overflow:hidden}
+#sea::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 80%,rgba(255,255,255,.12) 0 12%,transparent 13%),radial-gradient(circle at 75% 70%,rgba(0,0,0,.12) 0 16%,transparent 17%),radial-gradient(circle at 50% 95%,rgba(0,0,0,.15) 0 25%,transparent 26%);pointer-events:none}
+#shark{position:absolute;top:12%;left:0;font-size:64px;transform:translateX(-120%);will-change:transform;filter:drop-shadow(0 4px 4px rgba(0,0,0,.3))}
+#octo{position:absolute;left:50%;top:52%;width:150px;height:150px;transform:translate(-50%,-50%);transition:transform .15s}
+#octo.hit{animation:shake .4s}
+#octo.ok{transform:translate(-50%,-50%) scale(1.08)}
+@keyframes shake{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(-60%,-50%) rotate(-8deg)}75%{transform:translate(-40%,-50%) rotate(8deg)}}
+#timer{position:absolute;left:10%;right:10%;bottom:16px;height:10px;border-radius:6px;background:rgba(0,0,0,.3);overflow:hidden}
+#timer i{display:block;height:100%;width:100%;background:#fff;border-radius:6px}
+#msg{position:absolute;left:0;right:0;top:30%;text-align:center;font-size:26px;font-weight:900;text-shadow:0 2px 6px rgba(0,0,0,.5);opacity:0;transition:opacity .15s;pointer-events:none}
+#pads{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:12px 12px calc(14px + env(safe-area-inset-bottom));background:#0b2340}
+.pad{height:68px;border-radius:16px;border:3px solid rgba(255,255,255,.85);font-size:18px;font-weight:800;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6);cursor:pointer;touch-action:manipulation}
+.pad:active{transform:scale(.96)}
+.pad.ink{grid-column:span 2;background:#111;height:58px}
+.overlay{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:rgba(8,24,46,.94)}
+.overlay.hidden{display:none}
+.overlay h1{font-size:30px;margin:10px 0 6px}
+.overlay p{opacity:.9;line-height:1.55;margin:6px 0;word-break:keep-all}
+.big{font-size:84px}
+.btn{display:inline-block;margin:8px 6px;padding:14px 22px;border-radius:999px;border:0;font-size:18px;font-weight:800;cursor:pointer;background:#ffcf3f;color:#222}
+.btn.ghost{background:transparent;color:#fff;border:2px solid #fff}
+.score{font-size:56px;font-weight:900;color:#ffcf3f;margin:6px 0}
+.small{font-size:13px;opacity:.7;margin-top:14px}
+.small a{color:#9fd4ff}
+#toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:#fff;color:#111;padding:10px 16px;border-radius:12px;font-weight:700;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud"><span id="time">⏱ 45</span><span id="score">0점</span><span class="hearts" id="hearts">❤️❤️❤️</span><button id="mute" aria-label="소리 켜기">🔇</button></div>
+  <div id="sea">
+    <div id="shark">🦈</div>
+    <svg id="octo" viewBox="0 0 100 100" aria-hidden="true">
+      <g id="octoBody" fill="#2d6a9f" stroke="rgba(0,0,0,.35)" stroke-width="2">
+        <path d="M18 62 q-8 22 6 28 q4-14 10-22z"/><path d="M30 66 q-4 24 10 26 q0-14 4-24z"/><path d="M46 68 q0 24 10 24 q2-12-2-24z"/><path d="M60 66 q8 22 18 20 q-4-12-10-22z"/><path d="M70 60 q16 18 24 12 q-8-8-16-18z"/><path d="M12 56 q-14 12-6 22 q6-10 14-16z"/>
+        <ellipse cx="50" cy="42" rx="32" ry="30"/>
+      </g>
+      <circle cx="38" cy="44" r="8" fill="#fff"/><circle cx="62" cy="44" r="8" fill="#fff"/>
+      <circle id="eyeL" cx="39" cy="45" r="4" fill="#111"/><circle id="eyeR" cx="63" cy="45" r="4" fill="#111"/>
+      <path d="M44 58 q6 5 12 0" stroke="#111" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </svg>
+    <div id="msg"></div>
+    <div id="timer"><i id="bar"></i></div>
+  </div>
+  <div id="pads"></div>
+
+  <div class="overlay" id="start">
+    <div class="big">🐙</div>
+    <h1>문어 변장술</h1>
+    <p>오늘은 <b>세계 문어의 날</b>!<br>상어 🦈가 지나가기 전에<br><b>배경과 같은 색</b>을 눌러 몸을 숨기세요.</p>
+    <p>🦈 상어가 <b>정면으로 돌진</b>하면 <b>먹물 발사!</b><br>45초 · 하트 3개</p>
+    <button class="btn" id="startBtn">탭해서 시작</button>
+    <p class="small"><a href="../../../">← 다른 미니게임 보기</a></p>
+  </div>
+
+  <div class="overlay hidden" id="result">
+    <div class="big" id="rEmoji">🐙</div>
+    <h1 id="rTitle">변장의 달인</h1>
+    <div class="score" id="rScore">0점</div>
+    <p id="rDetail"></p>
+    <div><button class="btn" id="shareBtn">📤 내 점수 공유하기</button></div>
+    <div><button class="btn ghost" id="retryBtn">🔁 다시 하기</button></div>
+    <p class="small">세계 문어의 날(10/8) 기념 원작 미니게임 · <a href="../../../">다른 게임 보기</a></p>
+  </div>
+  <div id="toast"></div>
+</div>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const qs=new URLSearchParams(location.search);
+const ROUND=Math.max(1,Math.min(120,Number(qs.get('dur'))||45));
+const PLAY_URL=location.origin+location.pathname;
+const COLORS=[
+ {n:'산호 빨강',c:'#e5533d'},{n:'모래 노랑',c:'#e8b64a'},{n:'해초 초록',c:'#3f9a4b'},
+ {n:'바다 파랑',c:'#2d6a9f'},{n:'바위 회색',c:'#7b7f86'},{n:'성게 보라',c:'#7c4dbb'},{n:'말미잘 분홍',c:'#e46fa8'}
+];
+let st='ready',score=0,hearts=3,combo=0,best=0,ok=0,timeLeft=ROUND,waveT=0,waveDur=2,target=null,ink=false,options=[],lastTs=0,locked=false,inks=0;
+let muted=true,ac=null;
+function beep(f,d=0.08,type='sine',v=0.08){if(muted)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+d);o.stop(ac.currentTime+d+0.02)}catch(e){}}
+$('mute').onclick=()=>{muted=!muted;$('mute').textContent=muted?'🔇':'🔊';$('mute').setAttribute('aria-label',muted?'소리 켜기':'소리 끄기');beep(660)};
+function toast(t){const el=$('toast');el.textContent=t;el.style.opacity=1;clearTimeout(toast._t);toast._t=setTimeout(()=>el.style.opacity=0,1800)}
+function msg(t,c){const m=$('msg');m.textContent=t;m.style.color=c||'#fff';m.style.opacity=1;clearTimeout(msg._t);msg._t=setTimeout(()=>m.style.opacity=0,600)}
+function hud(){$('time').textContent='⏱ '+Math.ceil(timeLeft);$('score').textContent=score+'점';$('hearts').textContent='❤️'.repeat(hearts)+'🤍'.repeat(3-hearts)}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function newWave(){
+  const elapsed=ROUND-timeLeft;
+  if(elapsed>20&&!newWave.warned){newWave.warned=true;setTimeout(()=>msg('⚠️ 이제 글자 말고 색을 보세요!','#fff'),250)}
+  waveDur=Math.max(0.85,2.1-elapsed*0.028);
+  waveT=0;locked=false;
+  ink=elapsed>6&&Math.random()<0.16;
+  const prev=target;
+  do{target=COLORS[Math.random()*COLORS.length|0]}while(target===prev);
+  $('sea').style.backgroundColor=target.c;
+  const n=4;
+  const others=shuffle(COLORS.filter(x=>x!==target)).slice(0,n-1);
+  options=shuffle([target,...others]);
+  renderPads();
+  const sh=$('shark');
+  sh.textContent='🦈';
+  sh.dataset.mode=ink?'charge':'swim';
+  if(ink){msg('🦈 정면 돌진!! 먹물!','#fff')}
+}
+function renderPads(){
+  const p=$('pads');p.innerHTML='';
+  // label text deliberately does not always match: later rounds use a different color name to add a mild trick
+  const elapsed=ROUND-timeLeft;
+  options.forEach(o=>{
+    const b=document.createElement('button');b.className='pad';b.style.background=o.c;
+    let label=o.n;
+    if(elapsed>20&&Math.random()<0.35){const other=COLORS[Math.random()*COLORS.length|0];label=other.n;}
+    b.textContent=label;
+    b.addEventListener('pointerdown',e=>{e.preventDefault();pick(o)});
+    p.appendChild(b);
+  });
+  const k=document.createElement('button');k.className='pad ink';k.textContent='🖤 먹물 발사';
+  k.addEventListener('pointerdown',e=>{e.preventDefault();pick('ink')});
+  p.appendChild(k);
+}
+function setOcto(c){$('octoBody').setAttribute('fill',c)}
+function pick(o){
+  if(st!=='play'||locked)return;
+  locked=true;
+  const correct=ink?o==='ink':o===target;
+  if(o!=='ink')setOcto(o.c);else setOcto('#111');
+  if(correct){
+    combo++;best=Math.max(best,combo);ok++;if(ink)inks++;
+    const speed=Math.max(0,1-waveT/waveDur);
+    const pts=Math.round((10+speed*10)*Math.min(3,1+Math.floor(combo/5)*0.5));
+    score+=pts;
+    msg((ink?'먹물 성공! ':'변장 성공! ')+'+'+pts+(combo>=5?'  🔥'+combo+'콤보':''),'#fff');
+    $('octo').classList.add('ok');setTimeout(()=>$('octo').classList.remove('ok'),150);
+    beep(520+combo*30,0.09,'triangle');
+    setTimeout(()=>{if(st==='play')newWave()},220);
+  }else{
+    fail(ink?'먹물을 쐈어야지!':'색이 달라! 들켰다');
+  }
+  hud();
+}
+function fail(t){
+  combo=0;hearts--;msg('🦷 '+t,'#ffd0d0');beep(140,0.25,'sawtooth',0.07);
+  const o=$('octo');o.classList.remove('hit');void o.offsetWidth;o.classList.add('hit');
+  if(navigator.vibrate)try{navigator.vibrate(80)}catch(e){}
+  hud();
+  if(hearts<=0){end();return}
+  locked=true;setTimeout(()=>{if(st==='play')newWave()},450);
+}
+function loop(ts){
+  if(st!=='play')return;
+  const dt=Math.min(0.05,(ts-(lastTs||ts))/1000);lastTs=ts;
+  timeLeft-=dt;
+  if(timeLeft<=0){timeLeft=0;hud();end();return}
+  if(!locked){
+    waveT+=dt;
+    if(waveT>=waveDur){fail(ink?'먹물을 못 쐈다!':'너무 늦었어!')}
+  }
+  const f=Math.min(1,waveT/waveDur);
+  $('bar').style.width=((1-f)*100)+'%';
+  const sh=$('shark'),W=$('sea').clientWidth;
+  if(sh.dataset.mode==='charge'){const s=0.6+f*1.8;sh.style.transform=`translate(${W/2-40}px,${f*80}px) scale(${s})`}
+  else sh.style.transform=`translateX(${-80+f*(W+40)}px) scaleX(-1)`;
+  const ex=Math.sin(ts/300)*1.5;$('eyeL').setAttribute('cx',39+ex);$('eyeR').setAttribute('cx',63+ex);
+  hud();
+  requestAnimationFrame(loop);
+}
+function start(){
+  newWave.warned=false;score=0;hearts=3;combo=0;best=0;ok=0;inks=0;timeLeft=ROUND;lastTs=0;
+  $('start').classList.add('hidden');$('result').classList.add('hidden');
+  st='play';hud();newWave();requestAnimationFrame(loop);beep(440);
+}
+function end(){
+  if(st==='over')return;st='over';
+  let t,e;
+  if(score>=1000){t='심해의 전설 문어';e='👑'}else if(score>=600){t='변장의 달인';e='🎭'}else if(score>=300){t='꽤 하는 카멜레온 문어';e='🦎'}else if(score>=100){t='아기 문어';e='🐙'}else{t='상어 간식…';e='🦈'}
+  $('rTitle').textContent=t;$('rEmoji').textContent=e;$('rScore').textContent=score+'점';
+  $('rDetail').textContent=`변장 성공 ${ok}번 · 최고 콤보 ${best} · 먹물 ${inks}번`+(hearts<=0?' · 상어에게 잡혔어요':' · '+ROUND+'초 생존!');
+  $('result').classList.remove('hidden');
+  window.__lastResult={score,ok,best};
+}
+async function share(){
+  const text=`🐙 문어 변장술에서 ${score}점! (${$('rTitle').textContent}) 세계 문어의 날 기념 ${ROUND}초 챌린지, 너도 해봐`;
+  const full=text+'\n'+PLAY_URL;
+  try{if(navigator.share){await navigator.share({title:'문어 변장술',text,url:PLAY_URL});return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(full);toast('복사됐어요! 친구에게 붙여넣기 📋')}
+  catch(e){const ta=document.createElement('textarea');ta.value=full;document.body.appendChild(ta);ta.select();let k=false;try{k=document.execCommand('copy')}catch(_){}ta.remove();toast(k?'복사됐어요! 📋':'주소를 직접 복사해 주세요: '+PLAY_URL)}
+}
+$('startBtn').addEventListener('click',start);
+$('start').addEventListener('click',e=>{if(e.target.tagName!=='A'&&st==='ready')start()});
+$('retryBtn').addEventListener('click',start);
+$('shareBtn').addEventListener('click',share);
+hud();
+window.__game={get state(){return st},get score(){return score}};
+})();
+</script>
+</body>
+</html>
