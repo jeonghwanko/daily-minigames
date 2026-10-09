@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>맞춤법 틀리면 썸 끝 💬 | 데일리 미니게임</title>
+<meta name="description" content="한글날 100돌 기념! 썸 상대에게 답장할 때 맞춤법 틀리면 정 떨어진다. 45초 맞춤법 썸 챌린지">
+<meta property="og:title" content="맞춤법 틀리면 썸 끝 💬 45초 챌린지">
+<meta property="og:description" content="봬요? 뵈요? 틀리면 읽씹 당한다. 너의 맞춤법 썸 지수는?">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💬</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#b9d3e8;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#222;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+#app{position:relative;max-width:480px;height:100%;margin:0 auto;display:flex;flex-direction:column;overflow:hidden;background:#b9d3e8}
+#top{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#a9c6de;font-weight:800}
+#top .av{width:38px;height:38px;border-radius:14px;background:#ffd7e3;display:flex;align-items:center;justify-content:center;font-size:24px}
+#top .nm{flex:1;font-size:16px}
+#top .nm small{display:block;font-size:11px;font-weight:600;opacity:.65}
+#time{font-size:16px}
+#mute{background:none;border:0;font-size:22px;cursor:pointer}
+#love{height:26px;margin:6px 12px 0;border-radius:13px;background:rgba(255,255,255,.6);position:relative;overflow:hidden}
+#love i{position:absolute;left:0;top:0;bottom:0;width:60%;background:linear-gradient(90deg,#ff8fb1,#ff4f86);transition:width .25s}
+#love span{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#5a1a33}
+#chat{flex:1;overflow:hidden;padding:10px 12px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px}
+.b{max-width:78%;padding:9px 12px;border-radius:16px;font-size:16px;line-height:1.4;word-break:keep-all;animation:pop .18s ease-out}
+.b.them{align-self:flex-start;background:#fff;border-top-left-radius:4px}
+.b.me{align-self:flex-end;background:#ffe14d;border-top-right-radius:4px}
+.b.me.bad{background:#ffd0d0;text-decoration:line-through wavy #e33}
+.b.sys{align-self:center;background:rgba(0,0,0,.18);color:#fff;font-size:12px;padding:4px 10px}
+@keyframes pop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
+#compose{background:#fff;padding:10px 12px calc(12px + env(safe-area-inset-bottom));border-top:1px solid #ddd}
+#draft{font-size:18px;font-weight:700;text-align:center;min-height:30px;margin-bottom:8px;word-break:keep-all}
+#draft u{text-decoration:none;display:inline-block;min-width:54px;border-bottom:3px solid #ff4f86;color:#ff4f86}
+#tbar{height:6px;border-radius:3px;background:#eee;overflow:hidden;margin-bottom:10px}
+#tbar i{display:block;height:100%;width:100%;background:#ff4f86}
+#opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{height:64px;border-radius:16px;border:0;font-size:22px;font-weight:900;background:#f1f3f7;color:#222;cursor:pointer;touch-action:manipulation;box-shadow:0 3px 0 #cfd4dd}
+.opt:active{transform:translateY(2px);box-shadow:0 1px 0 #cfd4dd}
+#msg{position:absolute;left:0;right:0;top:38%;text-align:center;font-size:28px;font-weight:900;text-shadow:0 2px 6px rgba(255,255,255,.8);opacity:0;transition:opacity .15s;pointer-events:none}
+.overlay{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:rgba(255,246,250,.97)}
+.overlay.hidden{display:none}
+.overlay h1{font-size:28px;margin:10px 0 6px}
+.overlay p{line-height:1.55;margin:6px 0;word-break:keep-all}
+.big{font-size:80px}
+.btn{display:inline-block;margin:8px 6px;padding:14px 22px;border-radius:999px;border:0;font-size:18px;font-weight:800;cursor:pointer;background:#ff4f86;color:#fff}
+.btn.ghost{background:transparent;color:#ff4f86;border:2px solid #ff4f86}
+.score{font-size:54px;font-weight:900;color:#ff4f86;margin:4px 0}
+.small{font-size:13px;opacity:.7;margin-top:14px}
+.small a{color:#c2185b}
+#toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:12px;font-weight:700;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top"><div class="av">🐰</div><div class="nm">썸토끼 <small>답장 기다리는 중…</small></div><span id="time">⏱ 45</span><button id="mute" aria-label="소리 켜기">🔇</button></div>
+  <div id="love"><i id="loveBar"></i><span id="loveTxt">호감도 60</span></div>
+  <div id="chat"></div>
+  <div id="msg"></div>
+  <div id="compose">
+    <div id="draft">…</div>
+    <div id="tbar"><i id="bar"></i></div>
+    <div id="opts"><button class="opt" id="o0">-</button><button class="opt" id="o1">-</button></div>
+  </div>
+
+  <div class="overlay" id="start">
+    <div class="big">💬</div>
+    <h1>맞춤법 틀리면 썸 끝</h1>
+    <p>오늘은 <b>한글날 100돌</b>!<br>썸토끼🐰에게 답장을 보내는데…<br>빈칸에 <b>맞는 맞춤법</b>을 골라 보내세요.</p>
+    <p>틀리거나 늦으면 호감도 💔 뚝<br>45초 동안 호감도를 지켜라!</p>
+    <button class="btn" id="startBtn">탭해서 시작</button>
+    <p class="small"><a href="../../../">← 다른 미니게임 보기</a></p>
+  </div>
+
+  <div class="overlay hidden" id="result">
+    <div class="big" id="rEmoji">💘</div>
+    <h1 id="rTitle">썸 성공</h1>
+    <div class="score" id="rScore">0점</div>
+    <p id="rDetail"></p>
+    <p id="rWrong" style="font-size:14px;opacity:.8"></p>
+    <div><button class="btn" id="shareBtn">📤 내 점수 공유하기</button></div>
+    <div><button class="btn ghost" id="retryBtn">🔁 다시 하기</button></div>
+    <p class="small">한글날(10/9) 기념 원작 미니게임 · <a href="../../../">다른 게임 보기</a></p>
+  </div>
+  <div id="toast"></div>
+</div>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const qs=new URLSearchParams(location.search);
+const ROUND=Math.max(1,Math.min(120,Number(qs.get('dur'))||45));
+const PLAY_URL=location.origin+location.pathname;
+// [상대 메시지, 내 답장(빈칸 ___), 정답, 오답]
+const Q=[
+ ['내일 카페 갈래? ☕','좋아요! 그럼 내일 ___','봬요','뵈요'],
+ ['나 지하철 놓쳤어 ㅠㅠ','헐 ___ 괜찮아?','어떡해','어떻해'],
+ ['밥은 내가 살게!','그럼 ___는 내가 할게','설거지','설겆이'],
+ ['나 거의 다 왔어','오 ___ 왔네?','금세','금새'],
+ ['우리 마지막으로 본 게 언제지?','벌써 ___ 됐잖아','며칠','몇일'],
+ ['안녕! 잘 지냈어?','진짜 ___이다 ㅎㅎ','오랜만','오랫만'],
+ ['이사 도와줄까?','아냐 ___ 안 그래도 돼!','굳이','궂이'],
+ ['오늘 하늘 예쁘다','그러게 ___ 기분 좋더라','왠지','웬지'],
+ ['쿠키 구워 왔어 🍪','이게 ___ 쿠키야?! 감동','웬','왠'],
+ ['나 오늘 좀 늦을 듯','걱정 ___ 해도 돼 천천히 와','안','않'],
+ ['지금 전화해도 돼?','응 지금 ___!','돼','되'],
+ ['내 친구가 너 궁금하대','진짜? 뭐라고 ___?','했대','했데'],
+ ['그 소문 들었어?','아니 무슨 ___?','얘기','예기'],
+ ['나 우산 두고 왔어 ㅋㅋ','진짜 ___ ㅋㅋㅋ','어이없다','어의없다'],
+ ['혹시 나 기다렸어?','아니 ___ 기다린 건 아니고…','일부러','일부로'],
+ ['뭐 먹고 싶어?','매콤한 ___!','떡볶이','떡볶기'],
+ ['나 감기 걸렸어 🤧','헉 빨리 ___!','나아','낳아'],
+ ['비 엄청 온다…','내가 ___ 갈게 기다려','데리러','데릴러'],
+ ['지금 바빠?','조금! ___ 연락할게','이따가','있다가'],
+ ['너 내 생일 기억했어?','당연하지 그걸 ___ 잊어','어떻게','어떡해'],
+ ['고양이가 내 신발 물고 감 ㅋㅋ','와 ___하네 ㅋㅋㅋ','희한','희안'],
+ ['너 보면 무슨 생각 들어?','음… 좀 ___','설레','설레여'],
+ ['집 도착했어?','응! 자기 전에 연락___','할게','할께'],
+ ['나 길치인 거 알지…','도착하면 ___ 연락해!','반드시','반듯이'],
+ ['어제 약속 왜 안 왔어?','미안 진짜 ___ 버렸어','잊어','잃어'],
+ ['계산은 어떻게 할까?','이번엔 내가 ___할게','결제','결재'],
+ ['퀴즈 낼게! 맞혀 봐','좋아 정답 ___ 볼게','맞혀','맞춰'],
+ ['팀플에서 나 뭐 해?','너는 발표 ___ 해 줘','역할','역활'],
+ ['나 오늘 머리 잘랐어','오 사진 보여 ___!','줘','져'],
+ ['배고프다…','라면 ___ 줄까?','끓여','끓혀']
+];
+let st='ready',score=0,love=60,ok=0,miss=0,combo=0,best=0,timeLeft=ROUND,qT=0,qDur=4.5,cur=null,swap=false,deck=[],lastTs=0,locked=false,wrongs=[];
+let muted=true,ac=null;
+function beep(f,d=0.08,type='sine',v=0.08){if(muted)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+d);o.stop(ac.currentTime+d+0.02)}catch(e){}}
+$('mute').onclick=()=>{muted=!muted;$('mute').textContent=muted?'🔇':'🔊';$('mute').setAttribute('aria-label',muted?'소리 켜기':'소리 끄기');beep(660)};
+function toast(t){const el=$('toast');el.textContent=t;el.style.opacity=1;clearTimeout(toast._t);toast._t=setTimeout(()=>el.style.opacity=0,1800)}
+function msg(t,c){const m=$('msg');m.textContent=t;m.style.color=c||'#222';m.style.opacity=1;clearTimeout(msg._t);msg._t=setTimeout(()=>m.style.opacity=0,650)}
+function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+function hud(){$('time').textContent='⏱ '+Math.ceil(timeLeft);const l=Math.max(0,Math.min(100,love));$('loveBar').style.width=l+'%';$('loveTxt').textContent=(l>=80?'💘':l>=40?'💗':'💔')+' 호감도 '+Math.round(l)}
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function bubble(text,who,cls){const c=$('chat');const d=document.createElement('div');d.className='b '+who+(cls?' '+cls:'');d.textContent=text;c.appendChild(d);while(c.children.length>14)c.removeChild(c.firstChild)}
+function next(){
+  if(!deck.length)deck=shuffle(Q.slice());
+  cur=deck.pop();swap=Math.random()<0.5;
+  const elapsed=ROUND-timeLeft;
+  qDur=Math.max(2.2,4.5-elapsed*0.05);qT=0;locked=false;
+  bubble(cur[0],'them');
+  $('draft').innerHTML=esc(cur[1]).replace('___','<u>?</u>');
+  $('o0').textContent=swap?cur[3]:cur[2];$('o1').textContent=swap?cur[2]:cur[3];
+}
+function answer(i){
+  if(st!=='play'||locked||!cur)return;
+  locked=true;
+  const pickedRight=(i===0)!==swap;
+  const word=pickedRight?cur[2]:cur[3];
+  const text=cur[1].replace('___',word);
+  if(pickedRight){
+    ok++;combo++;best=Math.max(best,combo);
+    const speed=Math.max(0,1-qT/qDur);
+    const pts=Math.round((10+speed*10)*(1+Math.min(4,Math.floor(combo/4))*0.25));
+    score+=pts;love=Math.min(100,love+6);
+    bubble(text,'me');
+    msg((combo>=4?'🔥'+combo+'콤보 ':'')+'+'+pts,'#ff4f86');beep(620+combo*25,0.08,'triangle');
+    if(combo%5===0)setTimeout(()=>bubble(['ㅎㅎ 말 예쁘게 한다','너랑 얘기하면 편해 ☺️','💗','오 맞춤법 완벽…설렘'][Math.random()*4|0],'them'),150);
+  }else{
+    bad(text,'정 떨어짐…');
+  }
+  hud();
+  if(st==='play')setTimeout(()=>{if(st==='play')next()},pickedRight?260:650);
+}
+function bad(text,why){
+  miss++;combo=0;love-=22;
+  wrongs.push(cur[2]);
+  if(text)bubble(text,'me','bad');
+  setTimeout(()=>bubble(['…?','ㅋ','아 네…','(읽음)','방금 뭐라고?','😐'][Math.random()*6|0],'them'),120);
+  msg('💔 '+why+' (정답: '+cur[2]+')','#d81b60');beep(150,0.25,'sawtooth',0.07);
+  if(navigator.vibrate)try{navigator.vibrate(70)}catch(e){}
+  hud();
+  if(love<=0){love=0;hud();setTimeout(end,500);st='ending'}
+}
+function loop(ts){
+  if(st!=='play')return;
+  const dt=Math.min(0.05,(ts-(lastTs||ts))/1000);lastTs=ts;
+  timeLeft-=dt;
+  if(timeLeft<=0){timeLeft=0;hud();end();return}
+  if(!locked){qT+=dt;if(qT>=qDur){locked=true;bubble('(답장 없음)','sys');bad('','너무 늦었어');if(st==='play')setTimeout(()=>{if(st==='play')next()},650)}}
+  $('bar').style.width=(Math.max(0,1-qT/qDur)*100)+'%';
+  hud();requestAnimationFrame(loop);
+}
+function start(){
+  score=0;love=60;ok=0;miss=0;combo=0;best=0;timeLeft=ROUND;lastTs=0;wrongs=[];deck=shuffle(Q.slice());
+  $('chat').innerHTML='';bubble('오늘 한글날이라 쉬지? 뭐 해?','them');
+  $('start').classList.add('hidden');$('result').classList.add('hidden');
+  st='play';hud();setTimeout(()=>{if(st==='play')next()},300);requestAnimationFrame(loop);beep(440);
+}
+function end(){
+  if(st==='over')return;st='over';
+  let t,e;
+  if(love<=0){t='읽씹 당함… 썸 종료';e='📵'}
+  else if(score>=900&&love>=80){t='맞춤법 장인, 고백 받음';e='💍'}
+  else if(score>=550){t='썸 성공! 주말 데이트 확정';e='💘'}
+  else if(score>=300){t='아직 썸 타는 중';e='💗'}
+  else{t='친구로 지내자…';e='🫠'}
+  $('rTitle').textContent=t;$('rEmoji').textContent=e;$('rScore').textContent=score+'점';
+  $('rDetail').textContent=`맞춤법 ${ok}개 정답 · 틀림 ${miss}개 · 최고 콤보 ${best} · 호감도 ${Math.round(Math.max(0,love))}`;
+  const w=[...new Set(wrongs)].slice(0,4);
+  $('rWrong').textContent=w.length?'다시 볼 맞춤법: '+w.join(', '):'틀린 맞춤법 없음! 훈민정음 레벨 ✍️';
+  $('result').classList.remove('hidden');
+  window.__lastResult={score,ok,miss,love};
+}
+async function share(){
+  const text=`💬 맞춤법 틀리면 썸 끝: ${score}점, 결과는 "${$('rTitle').textContent}" ${$('rEmoji').textContent} 한글날 기념 ${ROUND}초 챌린지, 너는 봬요/뵈요 안 틀릴 자신 있어?`;
+  const full=text+'\n'+PLAY_URL;
+  try{if(navigator.share){await navigator.share({title:'맞춤법 틀리면 썸 끝',text,url:PLAY_URL});return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(full);toast('복사됐어요! 친구에게 붙여넣기 📋')}
+  catch(e){const ta=document.createElement('textarea');ta.value=full;document.body.appendChild(ta);ta.select();let k=false;try{k=document.execCommand('copy')}catch(_){}ta.remove();toast(k?'복사됐어요! 📋':'주소를 직접 복사해 주세요: '+PLAY_URL)}
+}
+['o0','o1'].forEach((id,i)=>$(id).addEventListener('pointerdown',e=>{e.preventDefault();answer(i)}));
+$('startBtn').addEventListener('click',start);
+$('start').addEventListener('click',e=>{if(e.target.tagName!=='A'&&st==='ready')start()});
+$('retryBtn').addEventListener('click',start);
+$('shareBtn').addEventListener('click',share);
+hud();
+window.__game={get state(){return st},get score(){return score},get correctIndex(){return swap?1:0}};
+})();
+</script>
+</body>
+</html>

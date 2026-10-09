@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>연휴 첫날 알람 사수 ⏰ | 데일리 미니게임</title>
+<meta name="description" content="한글날 3일 연휴 첫날! 깜빡하고 안 끈 평일 알람을 전부 꺼라. 너는 몇 시까지 꿀잠?">
+<meta property="og:title" content="연휴 첫날 알람 사수 ⏰ 너는 몇 시까지 잤어?">
+<meta property="og:description" content="'다시 알림' 말고 '끄기'! 연휴 첫날 꿀잠 지키기 챌린지">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⏰</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#1b1f3b;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;color:#fff;touch-action:manipulation;user-select:none;-webkit-user-select:none}
+#app{position:relative;max-width:480px;height:100%;margin:0 auto;display:flex;flex-direction:column;overflow:hidden}
+#hud{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-weight:800;font-size:17px;background:rgba(0,0,0,.3);z-index:3}
+#mute{background:none;border:0;font-size:22px;color:#fff;cursor:pointer}
+#room{position:relative;flex:1;overflow:hidden;background:linear-gradient(#262b55,#3b3566 70%,#4d3f6e);transition:background 1s}
+#clock{position:absolute;top:10px;left:0;right:0;text-align:center;font-size:40px;font-weight:900;letter-spacing:2px;font-variant-numeric:tabular-nums;text-shadow:0 0 12px rgba(120,200,255,.6);color:#bfe6ff;z-index:1}
+#clock small{display:block;font-size:12px;letter-spacing:0;opacity:.7;font-weight:700}
+#bed{position:absolute;left:50%;bottom:6%;width:250px;height:150px;transform:translateX(-50%);z-index:1}
+#bed .frame{position:absolute;left:0;right:0;bottom:0;height:60px;background:#8a5a3c;border-radius:14px 14px 6px 6px}
+#bed .blanket{position:absolute;left:40px;right:6px;bottom:40px;height:62px;background:#f4a7b9;border-radius:30px 30px 10px 10px;box-shadow:inset 0 -8px 0 rgba(0,0,0,.08)}
+#bed .pillow{position:absolute;left:8px;bottom:58px;width:70px;height:40px;background:#fff;border-radius:18px}
+#sleeper{position:absolute;left:18px;bottom:72px;font-size:54px;transition:transform .2s}
+#sleeper.toss{animation:toss .35s}
+@keyframes toss{0%,100%{transform:rotate(0)}30%{transform:rotate(-18deg)}70%{transform:rotate(14deg)}}
+#zzz{position:absolute;left:80px;bottom:130px;font-size:22px;font-weight:900;opacity:.8;animation:z 2s infinite}
+@keyframes z{0%{transform:translate(0,0);opacity:0}30%{opacity:.9}100%{transform:translate(30px,-40px);opacity:0}}
+#sleep{position:absolute;left:12px;right:12px;bottom:10px;height:16px;border-radius:9px;background:rgba(0,0,0,.35);overflow:hidden;z-index:2}
+#sleep i{position:absolute;left:0;top:0;bottom:0;width:100%;background:linear-gradient(90deg,#7ad1ff,#a98bff);transition:width .1s}
+#sleep span{position:absolute;inset:0;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.al{position:absolute;width:176px;padding:10px;border-radius:18px;background:rgba(255,255,255,.96);color:#222;box-shadow:0 8px 20px rgba(0,0,0,.35);z-index:5;animation:ring .25s infinite}
+.al.calm{animation:none}
+@keyframes ring{0%,100%{transform:rotate(0)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+.al .t{font-size:26px;font-weight:900;font-variant-numeric:tabular-nums}
+.al .l{font-size:12px;opacity:.7;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.al .bs{display:flex;gap:6px}
+.al button{flex:1;height:44px;border-radius:12px;border:0;font-size:15px;font-weight:900;cursor:pointer;touch-action:manipulation}
+.al button.off{background:#ff5a5f;color:#fff}
+.al button.snz{background:#e7e9ef;color:#333}
+.al.trick button.off{background:#e7e9ef;color:#333}
+.al.trick button.snz{background:#ff5a5f;color:#fff}
+.al.noti{width:190px;background:#fffbe6;animation:none}
+.al.noti .t{font-size:16px}
+#msg{position:absolute;left:0;right:0;top:34%;text-align:center;font-size:24px;font-weight:900;text-shadow:0 2px 6px rgba(0,0,0,.6);opacity:0;transition:opacity .15s;pointer-events:none;z-index:6}
+.overlay{position:absolute;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:rgba(20,22,48,.95)}
+.overlay.hidden{display:none}
+.overlay h1{font-size:28px;margin:10px 0 6px}
+.overlay p{opacity:.92;line-height:1.55;margin:6px 0;word-break:keep-all}
+.big{font-size:80px}
+.btn{display:inline-block;margin:8px 6px;padding:14px 22px;border-radius:999px;border:0;font-size:18px;font-weight:800;cursor:pointer;background:#ffcf3f;color:#222}
+.btn.ghost{background:transparent;color:#fff;border:2px solid #fff}
+.score{font-size:36px;font-weight:900;color:#ffcf3f;margin:6px 0}
+.small{font-size:13px;opacity:.7;margin-top:14px}
+.small a{color:#9fd4ff}
+#toast{position:absolute;left:50%;bottom:90px;transform:translateX(-50%);background:#fff;color:#111;padding:10px 16px;border-radius:12px;font-weight:700;z-index:20;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud"><span id="time">⏱ 50</span><span id="cnt">끈 알람 0</span><button id="mute" aria-label="소리 켜기">🔇</button></div>
+  <div id="room">
+    <div id="clock">07:00<small>10월 9일 (금) 한글날 · 연휴 첫날</small></div>
+    <div id="bed"><div class="frame"></div><div class="pillow"></div><div class="blanket"></div><div id="sleeper">😴</div><div id="zzz">z Z</div></div>
+    <div id="sleep"><i id="sleepBar"></i><span id="sleepTxt">꿀잠 게이지</span></div>
+    <div id="msg"></div>
+  </div>
+
+  <div class="overlay" id="start">
+    <div class="big">⏰</div>
+    <h1>연휴 첫날 알람 사수</h1>
+    <p>오늘은 한글날, <b>3일 연휴 첫날</b>!<br>근데… 평일 알람을 안 끄고 잤다 😱</p>
+    <p>울리는 알람마다 <b>[끄기]</b>를 누르세요.<br>[다시 알림]을 누르면 곧 또 울려요.<br>🔔 택배·단톡 알림은 <b>건드리지 마세요</b>(깨요!)</p>
+    <p>꿀잠 게이지가 0이 되면 기상… 너는 몇 시까지 잘까?</p>
+    <button class="btn" id="startBtn">탭해서 시작</button>
+    <p class="small"><a href="../../../">← 다른 미니게임 보기</a></p>
+  </div>
+
+  <div class="overlay hidden" id="result">
+    <div class="big" id="rEmoji">😴</div>
+    <h1 id="rTitle">꿀잠 성공</h1>
+    <div class="score" id="rScore">오후 1:00</div>
+    <p id="rDetail"></p>
+    <div><button class="btn" id="shareBtn">📤 내 기상 시간 공유하기</button></div>
+    <div><button class="btn ghost" id="retryBtn">🔁 다시 자기</button></div>
+    <p class="small">한글날 연휴(10/9~11) 기념 원작 미니게임 · <a href="../../../">다른 게임 보기</a></p>
+  </div>
+  <div id="toast"></div>
+</div>
+<script>
+(()=>{
+const $=id=>document.getElementById(id);
+const qs=new URLSearchParams(location.search);
+const ROUND=Math.max(1,Math.min(120,Number(qs.get('dur'))||50));
+const PLAY_URL=location.origin+location.pathname;
+const START_MIN=7*60, MIN_PER_SEC=8.4; // 50초 = 7시간
+const LABELS=['평일 기상 (1)','평일 기상 (2) 진짜 일어나','출근 지하철 놓치지 마','5분만 더… 아니 일어나','헬스 가기로 했잖아','월간 회의 준비','혹시 몰라서 맞춘 알람','엄마가 맞춰 둔 알람'];
+const NOTI=['📦 택배가 문 앞에 도착했어요','💬 단톡방: 연휴에 뭐 해?? (+99)','🛒 장바구니 상품 가격이 내려갔어요','📱 소프트웨어 업데이트 가능','🎁 출석 체크하고 포인트 받기'];
+let st='ready',sleep=100,offs=0,snoozes=0,wakes=0,timeLeft=ROUND,elapsed=0,lastTs=0,spawnT=0,alarms=[],uid=0,pending=[];
+let muted=true,ac=null;
+function beep(f,d=0.08,type='sine',v=0.06){if(muted)return;try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(ac.destination);o.start();g.gain.exponentialRampToValueAtTime(0.0001,ac.currentTime+d);o.stop(ac.currentTime+d+0.02)}catch(e){}}
+$('mute').onclick=()=>{muted=!muted;$('mute').textContent=muted?'🔇':'🔊';$('mute').setAttribute('aria-label',muted?'소리 켜기':'소리 끄기');beep(660)};
+function toast(t){const el=$('toast');el.textContent=t;el.style.opacity=1;clearTimeout(toast._t);toast._t=setTimeout(()=>el.style.opacity=0,1800)}
+function msg(t,c){const m=$('msg');m.textContent=t;m.style.color=c||'#fff';m.style.opacity=1;clearTimeout(msg._t);msg._t=setTimeout(()=>m.style.opacity=0,650)}
+function gameMin(){return START_MIN+elapsed*MIN_PER_SEC}
+function fmtClock(m){m=Math.floor(m);const h=Math.floor(m/60)%24,mm=m%60;return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0')}
+function fmtKo(m){m=Math.floor(m);const h=Math.floor(m/60)%24,mm=m%60;const ap=h<12?'오전':'오후';const hh=h%12===0?12:h%12;return `${ap} ${hh}:${String(mm).padStart(2,'0')}`}
+function hud(){$('time').textContent='⏱ '+Math.ceil(timeLeft);$('cnt').textContent='끈 알람 '+offs;const s=Math.max(0,sleep);$('sleepBar').style.width=s+'%';$('sleepTxt').textContent=(s>60?'😴 꿀잠':s>30?'😪 뒤척뒤척':'😫 깨기 직전')+' '+Math.round(s);
+  $('clock').firstChild.nodeValue=fmtClock(gameMin());}
+function place(w,h){
+  const R=$('room').getBoundingClientRect();
+  const W=R.width,H=R.height;
+  for(let k=0;k<20;k++){
+    const x=8+Math.random()*Math.max(1,W-w-16),y=70+Math.random()*Math.max(1,H*0.62-h-70);
+    if(!alarms.some(a=>Math.abs(a.x-x)<w*0.8&&Math.abs(a.y-y)<h*0.8))return{x,y};
+  }
+  return{x:8+Math.random()*Math.max(1,W-w-16),y:70+Math.random()*Math.max(1,H*0.5-h)};
+}
+function spawn(kind){
+  if(alarms.length>=4)return;
+  const id=++uid;const noti=kind==='noti';
+  const el=document.createElement('div');el.className='al'+(noti?' noti':'');
+  const trick=!noti&&elapsed>18&&Math.random()<0.35;
+  if(trick)el.classList.add('trick');
+  const pos=place(noti?190:176,noti?70:118);
+  el.style.left=pos.x+'px';el.style.top=pos.y+'px';
+  if(noti){
+    el.innerHTML=`<div class="t"></div><div class="l">탭하지 말고 무시하세요</div>`;
+    el.querySelector('.t').textContent=NOTI[Math.random()*NOTI.length|0];
+    el.addEventListener('pointerdown',e=>{e.preventDefault();if(st!=='play')return;wake(15,'알림 확인하다 잠 깸…');remove(id)});
+  }else{
+    const t=fmtClock(gameMin()+(Math.random()*6|0));
+    const swap=Math.random()<(elapsed>10?0.5:0.2);
+    el.innerHTML=`<div class="t">⏰ ${t}</div><div class="l"></div><div class="bs"></div>`;
+    el.querySelector('.l').textContent=LABELS[Math.random()*LABELS.length|0];
+    const bs=el.querySelector('.bs');
+    const off=document.createElement('button');off.className='off';off.textContent='끄기';
+    const snz=document.createElement('button');snz.className='snz';snz.textContent='다시 알림';
+    if(swap){bs.appendChild(off);bs.appendChild(snz)}else{bs.appendChild(snz);bs.appendChild(off)}
+    off.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(st!=='play')return;offs++;sleep=Math.min(100,sleep+3);msg('끔! 🛌','#bff7c6');beep(880,0.06,'triangle');remove(id);hud()});
+    snz.addEventListener('pointerdown',e=>{e.preventDefault();e.stopPropagation();if(st!=='play')return;snoozes++;msg('😩 5분 뒤 또 울림','#ffd6a0');beep(300,0.1);remove(id);pending.push(elapsed+2.2);hud()});
+  }
+  $('room').appendChild(el);
+  alarms.push({id,el,noti,born:elapsed,x:pos.x,y:pos.y,life:noti?2.6:99});
+  if(!noti)beep(1200,0.05,'square',0.04);
+}
+function remove(id){const i=alarms.findIndex(a=>a.id===id);if(i<0)return;alarms[i].el.remove();alarms.splice(i,1)}
+function wake(n,t){wakes++;sleep-=n;msg('😵 '+t,'#ffb3b3');beep(160,0.2,'sawtooth',0.06);const s=$('sleeper');s.classList.remove('toss');void s.offsetWidth;s.classList.add('toss');if(navigator.vibrate)try{navigator.vibrate(60)}catch(e){}if(sleep<=0)end()}
+function loop(ts){
+  if(st!=='play')return;
+  const dt=Math.min(0.05,(ts-(lastTs||ts))/1000);lastTs=ts;
+  timeLeft-=dt;elapsed+=dt;
+  if(timeLeft<=0){timeLeft=0;hud();end();return}
+  spawnT-=dt;
+  const gap=Math.max(0.55,1.6-elapsed*0.025);
+  if(spawnT<=0){spawnT=gap*(0.7+Math.random()*0.6);spawn(elapsed>6&&Math.random()<0.18?'noti':'alarm')}
+  for(let i=pending.length-1;i>=0;i--){if(elapsed>=pending[i]){pending.splice(i,1);spawn('alarm')}}
+  let ringing=0;
+  for(let i=alarms.length-1;i>=0;i--){const a=alarms[i];if(a.noti){if(elapsed-a.born>a.life){a.el.remove();alarms.splice(i,1)}}else ringing++}
+  if(ringing)sleep-=dt*(5+ringing*4.5);else sleep=Math.min(100,sleep+dt*4);
+  $('zzz').style.display=ringing?'none':'';
+  $('sleeper').textContent=sleep>60?'😴':sleep>30?'😪':'😫';
+  const night=Math.min(1,elapsed/ROUND);
+  $('room').style.background=`linear-gradient(hsl(${230-night*30},${45-night*5}%,${18+night*40}%),hsl(${260-night*60},${30+night*20}%,${28+night*35}%))`;
+  if(sleep<=0){sleep=0;hud();end();return}
+  hud();requestAnimationFrame(loop);
+}
+function start(){
+  alarms.forEach(a=>a.el.remove());alarms=[];pending=[];
+  sleep=100;offs=0;snoozes=0;wakes=0;timeLeft=ROUND;elapsed=0;lastTs=0;spawnT=0.4;
+  $('start').classList.add('hidden');$('result').classList.add('hidden');
+  st='play';hud();requestAnimationFrame(loop);beep(440);
+}
+function end(){
+  if(st==='over')return;st='over';
+  alarms.forEach(a=>a.el.classList.add('calm'));
+  const m=gameMin();const full=timeLeft<=0;
+  let t,e;
+  if(full){t='연휴 첫날 완벽한 꿀잠';e='👑'}
+  else if(m>=12*60){t='점심까지 숙면 성공';e='😴'}
+  else if(m>=10*60){t='브런치 타임 기상';e='🥐'}
+  else if(m>=8*60+30){t='평일보다 쪼끔 더 잠';e='😪'}
+  else{t='연휴인데 평일처럼 기상…';e='😫'}
+  $('rTitle').textContent=t;$('rEmoji').textContent=e;$('rScore').textContent=fmtKo(m)+(full?'까지 꿀잠':' 기상');
+  $('rDetail').textContent=`알람 ${offs}개 끔 · 다시 알림 ${snoozes}번 · 알림에 깸 ${wakes}번`;
+  $('result').classList.remove('hidden');
+  window.__lastResult={wake:fmtKo(m),offs,snoozes,wakes,full};
+}
+async function share(){
+  const text=`⏰ 연휴 첫날 알람 사수: 알람 ${offs}개 끄고 ${$('rScore').textContent}! (${$('rTitle').textContent}) 너는 몇 시까지 잘 수 있어?`;
+  const full=text+'\n'+PLAY_URL;
+  try{if(navigator.share){await navigator.share({title:'연휴 첫날 알람 사수',text,url:PLAY_URL});return}}catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(full);toast('복사됐어요! 친구에게 붙여넣기 📋')}
+  catch(e){const ta=document.createElement('textarea');ta.value=full;document.body.appendChild(ta);ta.select();let k=false;try{k=document.execCommand('copy')}catch(_){}ta.remove();toast(k?'복사됐어요! 📋':'주소를 직접 복사해 주세요: '+PLAY_URL)}
+}
+$('startBtn').addEventListener('click',start);
+$('start').addEventListener('click',e=>{if(e.target.tagName!=='A'&&st==='ready')start()});
+$('retryBtn').addEventListener('click',start);
+$('shareBtn').addEventListener('click',share);
+hud();
+window.__game={get state(){return st},get sleep(){return sleep}};
+})();
+</script>
+</body>
+</html>
