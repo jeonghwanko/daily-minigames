@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>MZ 생존 난이도: 헬 🔥 45초 버티기</title>
+<meta name="description" content="월세·물가·AI·경력직 신입을 피해서 45초 동안 잔고와 멘탈을 지켜라">
+<meta property="og:title" content="MZ 생존 난이도: 헬 🔥">
+<meta property="og:description" content="월급은 그대로, 나머지는 다 떨어진다. 45초 동안 버텨 보세요.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔥</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;background:#1a0f14;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",sans-serif;touch-action:none;user-select:none;-webkit-user-select:none}
+#wrap{position:relative;max-width:480px;height:100%;margin:0 auto}
+canvas{display:block;width:100%;height:100%}
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;padding:12px 14px;font-weight:800;font-size:16px;pointer-events:none;text-shadow:0 2px 4px #000}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:rgba(26,15,20,.92)}
+.ov h1{font-size:32px;line-height:1.2}
+.ov p{opacity:.85;margin-top:10px;line-height:1.55}
+.big{font-size:46px;font-weight:900;margin:8px 0;color:#ffd84d}
+.btn{margin-top:14px;padding:14px 28px;border-radius:999px;border:0;font-size:18px;font-weight:800;background:#ff4d5e;color:#fff;cursor:pointer;min-width:200px}
+.btn.alt{background:#3a2a33}
+.legend{margin-top:14px;font-size:14px;opacity:.85;line-height:1.8}
+.hide{display:none}
+#toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:#000c;padding:8px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+a.home{margin-top:16px;color:#ffb3bb;font-size:13px}
+</style>
+</head>
+<body>
+<div id="wrap">
+<canvas id="c"></canvas>
+<div id="hud"><span id="money">💰 0만원</span><span id="time">⏱ 45</span><span id="mental">🧠🧠🧠</span></div>
+<div id="start" class="ov">
+  <h1>🔥 MZ 생존<br>난이도: 헬</h1>
+  <p>월급만 빼고 다 오른다.<br>45초 동안 잔고와 멘탈을 지켜라!</p>
+  <div class="legend">💵 월급 +100만 · 🎁 보너스 +300만 · 🛌 휴식 멘탈+1<br>🏠 월세 잔고 반토막 · 📈 물가 -30만<br>🤖 AI 일자리 뺏김 · 📄 경력 3년 신입 → 멘탈-1</div>
+  <button class="btn" id="go">탭해서 시작</button>
+  <p style="font-size:13px;opacity:.6">좌우로 드래그해서 움직여요</p>
+</div>
+<div id="end" class="ov hide">
+  <p id="why"></p>
+  <div class="big" id="final"></div>
+  <h1 id="rank" style="font-size:24px"></h1>
+  <p id="desc"></p>
+  <button class="btn" id="share">결과 공유하기</button>
+  <button class="btn alt" id="retry">다시 버티기</button>
+  <a class="home" href="../../../">다른 미니게임 보기</a>
+</div>
+<div id="toast"></div>
+</div>
+<script>
+const URL_PLAY='https://jeonghwanko.github.io/daily-minigames/games/2026-10-14/mz-survival-hell/';
+const C=document.getElementById('c'),X=C.getContext('2d');
+let W,H,DPR;
+function resize(){DPR=Math.min(2,devicePixelRatio||1);const r=C.getBoundingClientRect();W=r.width;H=r.height;C.width=W*DPR;C.height=H*DPR;X.setTransform(DPR,0,0,DPR,0,0)}
+addEventListener('resize',resize);resize();
+const KINDS=[
+ {e:'💵',w:34,good:1,f:s=>{s.money+=100;return '+100만'}},
+ {e:'🎁',w:4,good:1,f:s=>{s.money+=300;return '보너스 +300만!'}},
+ {e:'🛌',w:4,good:1,f:s=>{if(s.mental<3){s.mental++;return '멘탈 회복'}s.money+=20;return '+20만'}},
+ {e:'🏠',w:16,f:s=>{s.money=Math.floor(s.money/2);return '월세… 반토막'}},
+ {e:'📈',w:20,f:s=>{s.money=Math.max(0,s.money-30);return '물가 -30만'}},
+ {e:'🤖',w:11,bad:1,f:s=>{s.mental--;s.why='AI한테 일자리를 뺏겼다';return 'AI가 내 자리를…'}},
+ {e:'📄',w:11,bad:1,f:s=>{s.mental--;s.why='신입인데 경력 3년을 요구받았다';return '신입(경력 3년)'}}
+];
+const TOT=KINDS.reduce((a,k)=>a+k.w,0);
+function pick(t){let r=Math.random()*(TOT+t*0.6);if(r>=TOT)return KINDS[3+Math.floor(Math.random()*4)];for(const k of KINDS){if((r-=k.w)<0)return k}return KINDS[0]}
+const DUR=45;let S,run=false,last=0,pops=[];
+function reset(){S={money:0,mental:3,t:0,px:W/2,items:[],spawn:0,why:'',best:0};pops=[]}
+function hud(){money.textContent='💰 '+S.money+'만원';time.textContent='⏱ '+Math.max(0,Math.ceil(DUR-S.t));mental.textContent='🧠'.repeat(Math.max(0,S.mental))+'🫥'.repeat(3-Math.max(0,S.mental))}
+function start(){reset();resize();S.px=W/2;startEl.classList.add('hide');endEl.classList.add('hide');run=true;last=performance.now();hud();requestAnimationFrame(loop)}
+function loop(now){if(!run)return;const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);draw();if(run)requestAnimationFrame(loop)}
+function step(dt){
+ S.t+=dt;const p=S.t/DUR;
+ S.spawn-=dt;if(S.spawn<=0){S.spawn=Math.max(.22,.75-p*.5);const k=pick(S.t);S.items.push({k,x:24+Math.random()*(W-48),y:-30,v:(150+p*230)*(0.85+Math.random()*.3)})}
+ const py=H-70;
+ for(const it of S.items){it.y+=it.v*dt;if(!it.hit&&Math.abs(it.y-py)<34&&Math.abs(it.x-S.px)<38){it.hit=1;const msg=it.k.f(S);pops.push({x:it.x,y:py-40,txt:msg,good:it.k.good,a:1});if(navigator.vibrate&&!it.k.good)navigator.vibrate(30)}}
+ S.items=S.items.filter(i=>!i.hit&&i.y<H+40);
+ for(const q of pops){q.y-=40*dt;q.a-=dt*1.1}pops=pops.filter(q=>q.a>0);
+ S.best=Math.max(S.best,S.money);hud();
+ if(S.mental<=0)end(false);else if(S.t>=DUR)end(true);
+}
+function draw(){
+ const g=X.createLinearGradient(0,0,0,H);g.addColorStop(0,'#3b1220');g.addColorStop(1,'#1a0f14');X.fillStyle=g;X.fillRect(0,0,W,H);
+ X.fillStyle='#ff4d5e22';X.fillRect(0,H-40,W,40);
+ X.textAlign='center';X.textBaseline='middle';X.font='34px sans-serif';
+ for(const it of S.items)X.fillText(it.k.e,it.x,it.y);
+ const py=H-70;X.font='46px sans-serif';X.fillText(S.mental>=3?'😐':S.mental==2?'😵‍💫':'🫠',S.px,py);
+ X.font='bold 15px sans-serif';
+ for(const q of pops){X.globalAlpha=Math.max(0,q.a);X.fillStyle=q.good?'#8dff9e':'#ff8a95';X.fillText(q.txt,q.x,q.y)}X.globalAlpha=1;X.fillStyle='#fff';
+}
+function rankOf(m,ok){
+ if(!ok)return ['🫠 번아웃 엔딩','멘탈이 먼저 바사삭. 오늘은 그냥 누워도 됩니다.'];
+ if(m>=1500)return ['👑 생존 만렙','이 난이도에서 이 잔고? 비결 좀 공유해 주세요.'];
+ if(m>=800)return ['💪 갓생러','월세와 물가를 뚫고 살아남았다.'];
+ if(m>=300)return ['🙂 그럭저럭 생존','통장은 얇지만 멘탈은 지켰다.'];
+ return ['🥲 텅장 생존','살아남긴 했는데… 잔고가 스쳐 지나갔다.'];
+}
+function end(ok){run=false;const [r,d]=rankOf(S.money,ok);
+ why.textContent=ok?'45초 생존 성공!':(S.why||'멘탈 붕괴')+' (멘탈 0)';
+ final.textContent=S.money+'만원';rank.textContent=r;desc.textContent=d;
+ S.result={ok,r};endEl.classList.remove('hide');document.title='RESULT '+S.money+' '+r}
+function toast(t){const e=document.getElementById('toast');e.textContent=t;e.style.opacity=1;setTimeout(()=>e.style.opacity=0,1600)}
+async function share(){
+ const text=`MZ 생존 난이도: 헬 🔥 ${S.result.ok?'45초 생존':'번아웃'} · 잔고 ${S.money}만원 · ${S.result.r}\n너는 몇 만원 남기고 버틸 수 있어?`;
+ if(navigator.share){try{await navigator.share({title:'MZ 생존 난이도: 헬',text,url:URL_PLAY});return}catch(e){if(e&&e.name==='AbortError')return}}
+ const full=text+'\n'+URL_PLAY;
+ try{await navigator.clipboard.writeText(full);toast('링크를 복사했어요!')}catch(e){const ta=document.createElement('textarea');ta.value=full;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('링크를 복사했어요!')}catch(_){toast('복사 실패: '+URL_PLAY)}ta.remove()}
+}
+const startEl=document.getElementById('start'),endEl=document.getElementById('end');
+function mv(e){if(!run)return;const r=C.getBoundingClientRect();S.px=Math.max(24,Math.min(W-24,(e.clientX??e.touches[0].clientX)-r.left))}
+C.addEventListener('pointerdown',mv);C.addEventListener('pointermove',mv);
+document.getElementById('go').onclick=start;document.getElementById('retry').onclick=start;document.getElementById('share').onclick=share;
+reset();draw();
+if(location.hash==='#selftest'){start();let n=0;const iv=setInterval(()=>{if(!run){clearInterval(iv);return}S.t+=3;S.px=24+Math.random()*(W-48);if(++n>40)clearInterval(iv)},50)}
+</script>
+</body>
+</html>
