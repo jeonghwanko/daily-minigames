@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>동생아, 그거 아니야 🎧 말로만 줄이어폰 풀게 시키기 | 매듭 연구소 프로토타입</title>
+<meta name="description" content="뾰로통한 동생 보리에게 말로만 엉킨 줄이어폰을 풀게 시키세요. 보리는 글자 그대로 알아듣습니다.">
+<meta property="og:title" content="동생아, 그거 아니야 🎧">
+<meta property="og:description" content="말로만 줄이어폰 풀게 시키기. '왼쪽'이라고 하면 보리 왼쪽입니다.">
+<meta property="og:image" content="img/title.jpg">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎧</text></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <div id="stage">
+    <div id="room"><div class="wall"></div><div class="sofa"></div><div class="rug"></div></div>
+    <div id="top">
+      <div id="boriWrap"><img id="bori" src="img/wait.jpg" alt="보리"></div>
+      <div id="bubble"><span id="bubbleText">또 나야?</span><small id="bubbleSub"></small></div>
+    </div>
+    <canvas id="cv"></canvas>
+    <div id="hudCross" class="panel"><div>교차 <b id="nCross">0</b></div><div>매듭 <b id="nKnot">0</b></div><div id="timer2row">⏱ <b id="timer2">0:00</b></div><div id="warnRow" title="세게 경고">장력 <span id="warn">○○○</span></div></div>
+    <div id="hudTimer" class="panel">⏱ <b id="timer">0:00</b></div>
+    <button id="btnPause" class="panel small" aria-label="일시정지">⏸</button>
+    <div id="stamp">오해!</div>
+    <div id="cardInfo"></div>
+    <div id="pop"></div>
+    <div id="lock"></div>
+    <div id="directBadge">✋ 직접 하기 <b id="directLeft">15</b>초 · 손 <b id="handsLeft">3</b></div>
+    <div id="listWrap"><button id="listToggle" class="panel small">꼬인 곳 ▾</button><ol id="list" class="panel"></ol></div>
+    <div id="moodBox" class="panel"><img src="img/pout.jpg" alt=""><div class="moodBar"><i id="moodFill"></i></div><span id="moodTxt">기분 6</span></div>
+    <button id="btnDirect" class="chip">✋ <span class="kbd">Space</span> 직접 하기</button>
+  </div>
+  <div id="bar">
+    <div id="heard"><span id="heardText">🎙 “L 태그를 위로 빼” 처럼 말해 보세요</span><small id="heardParse"></small></div>
+    <form id="chat" autocomplete="off">
+      <button type="button" id="btnMic" aria-label="누르고 말하기">🎙</button>
+      <input id="inp" placeholder="보리에게 시키기 (예: 잭을 B 고리에서 빼)" maxlength="80" enterkeyhint="send">
+      <button id="btnSend" type="submit">보내기</button>
+    </form>
+    <div id="examples"></div>
+  </div>
+  <div id="border"></div>
+
+  <!-- 타이틀 -->
+  <section id="scTitle" class="overlay">
+    <img class="hero" src="img/title.jpg" alt="보리">
+    <h1>동생아,<br>그거 아니야</h1>
+    <p>엉킨 줄이어폰을 <b>말로만</b> 풀게 시키세요.<br>동생 보리는 <b>글자 그대로</b>알아듣습니다.</p>
+    <div class="row"><span>호칭</span>
+      <label><input type="radio" name="call" value="오빠" checked> 오빠</label>
+      <label><input type="radio" name="call" value="언니"> 언니</label>
+    </div>
+    <button class="btn" id="goSelect">시작하기</button>
+    <button class="btn ghost" id="goHow">하는 법</button>
+    <p class="tiny">매듭 연구소 프로토타입 · 페이퍼 규칙을 시뮬레이션해서 맞춘 룰</p>
+  </section>
+
+  <!-- 하는 법 -->
+  <section id="scHow" class="overlay hidden">
+    <div class="card scroll">
+      <h2>하는 법</h2>
+      <ol class="how">
+        <li>줄에 <b>L · R · Y · A · B · 잭</b> 이름표가 붙어 있어요. <b>이름표를 부르면</b> 보리가 잘 알아들어요.</li>
+        <li>‘꼬인 곳’ 목록을 보고 <b>한 번에 한 동작</b>만 시키세요.<br>
+          <code>L 태그를 위로 빼</code> <code>잭을 A 고리 밑으로 넣어</code> <code>잭을 B 고리에서 빼</code> <code>L을 R 쪽으로 돌려</code> <code>잭 매듭 살살 당겨</code></li>
+        <li>기준 없이 <b>“왼쪽/오른쪽”</b>이라고 하면 보리는 <b>자기 왼쪽</b>으로 해요. 마주 앉아 있으니 반대예요. “<b>내</b> 왼쪽 이어폰”, “<b>네</b> 왼쪽”처럼 기준을 붙이세요.</li>
+        <li><b>“그거, 저거”</b>는 엉뚱한 걸 집어요. <b>세게</b>는 줄이 비명을 질러요(경고 3번이면 끊김).</li>
+        <li><b>소리 지르면</b>(마이크가 크게 들리거나 “!!”) 보리가 삐져서 잠깐 아무것도 안 해요. <b>제발 · 고마워 · 잘했어</b>는 기분을 올려요.</li>
+        <li>답답하면 <b>Space</b>(모바일은 ✋ 버튼) 또는 “내가 할게” → 15초 동안 빨간 점을 <b>끌어서</b> 직접 풀 수 있어요. 대신 기분이 깎이고 ‘말로만 클리어’는 실패.</li>
+        <li>보리 기분이 0이 되면 자리를 떠요. 교차·매듭을 0으로 만들면 클리어!</li>
+      </ol>
+      <p class="tiny">🎙 음성은 크롬·엣지·사파리 일부에서만 돼요. 안 되면 채팅으로 똑같이 할 수 있어요. 음성 내용은 저장하지 않아요.</p>
+      <button class="btn" id="howClose">알겠어</button>
+    </div>
+  </section>
+
+  <!-- 스테이지 선택 -->
+  <section id="scSelect" class="overlay hidden">
+    <h2>어떤 걸 시킬까?</h2>
+    <div class="stages">
+      <button class="stageBtn" data-level="easy"><b>🎧 쉬움</b><span>주머니 엉킴 · 교차 4</span><em id="tEasy"></em></button>
+      <button class="stageBtn" data-level="medium"><b>🎒 보통</b><span>가방 바닥 · 교차 6 + 매듭 1</span><em id="tMedium"></em></button>
+      <button class="stageBtn" data-level="hard"><b>🐈 어려움</b><span>고양이 습격 · 교차 9 + 매듭 2</span><em id="tHard"></em></button>
+      <button class="stageBtn tie" data-level="tie"><b>👟 묶기 라운드</b><span>신발끈은 내가 직접 · 보리가 심사</span><em>90초</em></button>
+    </div>
+    <button class="btn ghost" id="selBack">뒤로</button>
+  </section>
+
+  <!-- 일시정지 -->
+  <section id="scPause" class="overlay hidden">
+    <h2>일시정지</h2>
+    <button class="btn" id="resume">계속</button>
+    <button class="btn ghost" id="pHow">하는 법</button>
+    <button class="btn ghost" id="pQuit">그만하기</button>
+  </section>
+
+  <!-- 끊김/퇴장 -->
+  <section id="scFail" class="overlay hidden fail">
+    <img class="hero" id="failImg" src="img/angry.jpg" alt="">
+    <div class="bubbleBig" id="failLine">……화 안 났어.</div>
+    <h2 id="failTitle">이어폰 사망 💔</h2>
+    <button class="btn" id="failRetry">다시 (R)</button>
+    <button class="btn ghost" id="failResult">결과 보기</button>
+  </section>
+
+  <!-- 결과 -->
+  <section id="scResult" class="overlay hidden">
+    <div class="card result">
+      <div class="resLeft"><img id="resImg" src="img/happy.jpg" alt=""><div class="bubbleBig small" id="resLine">말로 해 주니까 좋잖아</div></div>
+      <div class="resRight">
+        <h2 id="resTitle">클리어!</h2>
+        <div id="stars">★★★</div>
+        <div id="badge">말빨 장인</div>
+        <table id="resTable"></table>
+        <div class="btns">
+          <button class="btn" id="resShare">자랑하기</button>
+          <button class="btn" id="resNext">다음</button>
+          <button class="btn ghost" id="resRetry">다시</button>
+          <button class="btn ghost" id="resMenu">메뉴</button>
+        </div>
+        <p class="tiny" id="shareMsg"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 묶기 라운드 -->
+  <section id="scTie" class="overlay hidden tieSc">
+    <div class="tieTop">
+      <img id="tieBori" src="img/wait.jpg" alt="">
+      <div id="tieBubble">신발끈 좀 묶어 봐. 내가 심사함</div>
+      <div class="panel" id="tieTimer">⏱ 90</div>
+    </div>
+    <div id="tieStep">1/6 · 끈을 X자로 교차</div>
+    <canvas id="tcv"></canvas>
+    <button id="tieHold" class="btn hidden">꾹 눌러서 당기기</button>
+    <div id="tieResult" class="card hidden"></div>
+  </section>
+</div>
+<script src="engine.js"></script>
+<script src="game.js"></script>
+</body>
+</html>

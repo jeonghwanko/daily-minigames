@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>무사만루 KKK 챌린지</title>
+<meta property="og:title" content="무사만루 KKK 챌린지 ⚾">
+<meta property="og:description" content="가을야구 무사만루 위기! 45초 동안 삼진 몇 개 잡을 수 있을까?">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚾</text></svg>">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#0d2a1a;color:#fff;font-family:system-ui,-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;overflow:hidden;touch-action:manipulation;user-select:none}
+#app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;padding:12px}
+.hud{display:flex;justify-content:space-between;align-items:center;font-weight:700;gap:6px}
+.hud div{background:#ffffff18;border-radius:10px;padding:6px 10px;font-size:15px}
+.count{display:flex;gap:14px;justify-content:center;margin:10px 0 4px;font-size:14px}
+.dots span{display:inline-block;width:12px;height:12px;border-radius:50%;background:#ffffff30;margin-left:3px}
+.dots.b .on{background:#3ddc84}.dots.s .on{background:#ffd23f}.dots.o .on{background:#ff5a5a}
+.bases{text-align:center;font-size:13px;opacity:.85}
+#field{position:relative;flex:1;display:flex;align-items:center;justify-content:center}
+#zoneWrap{position:relative;width:78%;aspect-ratio:3/4}
+#zone{position:absolute;left:17%;top:17%;width:66%;height:66%;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);border:3px solid #fff;background:#ffffff0c}
+#zone div{border:1px dashed #ffffff40}
+#zone .c{background:#3ddc8433}#zone .m{background:#ff5a5a40}
+#ret{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:3px solid #ffd23f;box-shadow:0 0 12px #ffd23f;pointer-events:none}
+#ret:after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#ffd23f}
+#msg{position:absolute;top:4%;left:0;right:0;text-align:center;font-size:30px;font-weight:900;text-shadow:0 3px 0 #0008;pointer-events:none;transition:transform .15s}
+.tip{text-align:center;font-size:13px;opacity:.8;margin:6px 0}
+.ov{position:fixed;inset:0;background:#0d2a1af2;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;z-index:5}
+.ov h1{font-size:30px;margin:6px 0}.ov p{line-height:1.6;opacity:.9;margin:6px 0}
+.big{font-size:64px}
+.btn{border:0;border-radius:14px;padding:14px 26px;font-size:18px;font-weight:800;margin:6px;background:#ffd23f;color:#222;cursor:pointer;min-width:200px}
+.btn.g{background:#ffffff22;color:#fff}
+.hide{display:none}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#000c;padding:10px 16px;border-radius:10px;opacity:0;transition:.3s;z-index:9}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="hud"><div>⏱ <span id="t">45</span>초</div><div>🔥 삼진 <span id="k">0</span></div><div>😱 실점 <span id="r">0</span>/4</div></div>
+  <div class="count">
+    <div class="dots b">B<span></span><span></span><span></span></div>
+    <div class="dots s">S<span></span><span></span></div>
+    <div class="dots o">O<span></span><span></span></div>
+  </div>
+  <div class="bases">🏃 1루 🏃 2루 🏃 3루 — 주자 꽉 찼다!</div>
+  <div id="field"><div id="zoneWrap">
+    <div id="zone"><div class="c"></div><div></div><div class="c"></div><div></div><div class="m"></div><div></div><div class="c"></div><div></div><div class="c"></div></div>
+    <div id="ret"></div><div id="msg"></div>
+  </div></div>
+  <div class="tip">조준점이 <b style="color:#3ddc84">모서리</b>에 올 때 탭! 한가운데는 얻어맞고, 존 밖은 볼</div>
+</div>
+
+<div class="ov" id="intro">
+  <div class="big">⚾</div>
+  <h1>무사만루 KKK 챌린지</h1>
+  <p>가을야구, 무사만루 대위기.<br>마운드엔 당신뿐이다.</p>
+  <p>움직이는 조준점이 <b>스트라이크존 모서리</b>에 왔을 때 화면을 탭해 던지세요.<br>한가운데 실투는 적시타, 볼넷은 밀어내기 실점!<br>45초 안에 삼진을 최대한 많이. 4실점하면 강판.</p>
+  <button class="btn" id="go">탭해서 시작</button>
+</div>
+
+<div class="ov hide" id="end">
+  <div class="big" id="eEmo">🔥</div>
+  <h1 id="eTitle"></h1>
+  <p id="eDesc"></p>
+  <p style="font-size:22px;font-weight:800">삼진 <span id="eK"></span>개 · 실점 <span id="eR"></span></p>
+  <button class="btn" id="share">결과 공유하기</button>
+  <button class="btn g" id="retry">다시 던지기</button>
+</div>
+<div id="toast"></div>
+
+<script>
+const URL_PLAY='https://jeonghwanko.github.io/daily-minigames/games/2026-10-15/bases-loaded-kkk/';
+const $=id=>document.getElementById(id);
+const wrap=$('zoneWrap'),ret=$('ret'),msg=$('msg');
+let S,run=false,last=0,lock=0;
+function reset(){S={t:45,k:0,r:0,b:0,s:0,o:0,ph:Math.random()*6,x:.5,y:.5,clean:0,inningR:0}}
+function dots(cls,n){document.querySelectorAll('.dots.'+cls+' span').forEach((e,i)=>e.classList.toggle('on',i<n))}
+function hud(){$('t').textContent=Math.ceil(S.t);$('k').textContent=S.k;$('r').textContent=S.r;dots('b',S.b);dots('s',S.s);dots('o',S.o)}
+function say(t,c){msg.textContent=t;msg.style.color=c||'#fff';msg.style.transform='scale(1.25)';setTimeout(()=>msg.style.transform='scale(1)',150)}
+function start(){reset();$('intro').classList.add('hide');$('end').classList.add('hide');run=true;last=performance.now();say('플레이볼!');hud();requestAnimationFrame(loop)}
+function loop(now){if(!run)return;const dt=Math.min(.05,(now-last)/1000);last=now;S.t-=dt;
+  const sp=1.6+S.k*.12;S.ph+=dt*sp;
+  S.x=.5+.42*Math.sin(S.ph*1.7);S.y=.5+.42*Math.sin(S.ph*2.3+1);
+  ret.style.left=(S.x*100)+'%';ret.style.top=(S.y*100)+'%';
+  if(S.t<=0){S.t=0;hud();return finish()}
+  hud();requestAnimationFrame(loop)}
+function newBatter(){S.b=0;S.s=0}
+function pitch(){if(!run||performance.now()<lock)return;lock=performance.now()+250;
+  // zone spans 17%..83% of wrap
+  const zx=(S.x-.17)/.66,zy=(S.y-.17)/.66;
+  if(zx<0||zx>1||zy<0||zy>1){S.b++;if(S.b>=4){S.r++;S.inningR++;newBatter();say('볼넷… 밀어내기 😱','#ff8a8a')}else say('볼!','#3ddc84')}
+  else{const cx=Math.min(2,Math.floor(zx*3)),cy=Math.min(2,Math.floor(zy*3));
+    if(cx===1&&cy===1){S.r++;S.inningR++;newBatter();say('딱! 적시타 😭','#ff5a5a')}
+    else if(cx!==1&&cy!==1){S.s++;say(S.s>=3?'':'헛스윙! 스트라이크','#ffd23f')}
+    else{if(S.s<2){S.s++;say('파울… 스트라이크','#ffe48a')}else say('파울! 버텼다','#ffe48a')}
+    if(S.s>=3){S.k++;S.o++;newBatter();
+      if(S.o>=3){S.o=0;if(S.inningR===0){S.clean++;say('무사만루 KKK!!! 🔥','#ffd23f')}else say('이닝 종료! 다시 무사만루','#fff');S.inningR=0}
+      else say('삼진!! K','#ffd23f')}}
+  if(navigator.vibrate)navigator.vibrate(20);
+  hud();if(S.r>=4)finish()}
+function grade(){const k=S.k;
+  if(k>=12)return['👑','가을의 에이스','포효 각. 무사만루가 오히려 편한 사람.'];
+  if(k>=8)return['🔥','위기 탈출 장인','관중석이 일어났다. 오늘 MVP 후보.'];
+  if(k>=4)return['💪','버티는 불펜','흔들렸지만 결국 막아냈다.'];
+  return['😵','조기 강판','감독이 마운드로 걸어오고 있다…']}
+function finish(){run=false;const[g,t,d]=grade();$('eEmo').textContent=g;$('eTitle').textContent=t;
+  $('eDesc').textContent=d+(S.clean?` (무실점 KKK 이닝 ${S.clean}번!)`:'');$('eK').textContent=S.k;$('eR').textContent=S.r;
+  setTimeout(()=>$('end').classList.remove('hide'),400)}
+function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;setTimeout(()=>e.style.opacity=0,1800)}
+async function share(){const[,t]=grade();const text=`⚾ 무사만루 KKK 챌린지에서 삼진 ${S.k}개, 실점 ${S.r}! 등급: ${t}\n너는 막을 수 있어?`;
+  if(navigator.share){try{await navigator.share({title:'무사만루 KKK 챌린지',text,url:URL_PLAY});return}catch(e){if(e&&e.name==='AbortError')return}}
+  const full=text+'\n'+URL_PLAY;
+  try{await navigator.clipboard.writeText(full);toast('링크를 복사했어요!')}catch(e){const ta=document.createElement('textarea');ta.value=full;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('링크를 복사했어요!')}catch(_){toast('복사 실패: '+URL_PLAY)}ta.remove()}}
+$('field').addEventListener('pointerdown',pitch);
+document.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();pitch()}});
+$('go').onclick=start;$('retry').onclick=start;$('share').onclick=share;
+if(location.hash==='#selftest'){start();let n=0;const iv=setInterval(()=>{if(!run){clearInterval(iv);document.title='DONE k='+S.k+' r='+S.r;return}lock=0;pitch();S.t-=1;if(++n>60)clearInterval(iv)},30)}
+</script>
+</body>
+</html>
