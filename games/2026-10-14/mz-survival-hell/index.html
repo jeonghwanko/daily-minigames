@@ -23,6 +23,14 @@ canvas{display:block;width:100%;height:100%}
 .legend{margin-top:14px;font-size:14px;opacity:.85;line-height:1.8}
 .hide{display:none}
 #toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:#000c;padding:8px 14px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .2s;pointer-events:none}
+#noti{position:absolute;top:8px;left:8px;right:8px;background:rgba(245,245,247,.97);color:#111;border-radius:16px;padding:10px 12px;box-shadow:0 8px 24px #0008;transform:translateY(-130%);transition:transform .22s;pointer-events:none;z-index:5;display:flex;gap:10px;align-items:center}
+#noti.on{transform:translateY(0);animation:buzz .08s 4 alternate}
+#noti .ic{width:36px;height:36px;border-radius:9px;background:#ff4d5e;display:flex;align-items:center;justify-content:center;font-size:20px;flex:none}
+#noti b{font-size:13px}#noti small{float:right;color:#888;font-size:11px}#noti div.m{font-size:14px;margin-top:2px}
+@keyframes buzz{from{margin-left:-4px}to{margin-left:4px}}
+#vig{position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 90px 30px rgba(255,0,30,.55);opacity:0;transition:opacity .4s}
+#money.neg{color:#ff3344;animation:fl .4s infinite alternate}@keyframes fl{to{opacity:.3}}
+.shk{animation:shk .1s infinite}@keyframes shk{0%{transform:translate(3px,-2px)}50%{transform:translate(-3px,2px)}100%{transform:translate(2px,3px)}}
 a.home{margin-top:16px;color:#ffb3bb;font-size:13px}
 </style>
 </head>
@@ -33,7 +41,7 @@ a.home{margin-top:16px;color:#ffb3bb;font-size:13px}
 <div id="start" class="ov">
   <h1>🔥 MZ 생존<br>난이도: 헬</h1>
   <p>월급만 빼고 다 오른다.<br>45초 동안 잔고와 멘탈을 지켜라!</p>
-  <div class="legend">💵 월급 +100만 · 🎁 보너스 +300만 · 🛌 휴식 멘탈+1<br>🏠 월세 잔고 반토막 · 📈 물가 -30만<br>🤖 AI 일자리 뺏김 · 📄 경력 3년 신입 → 멘탈-1</div>
+  <div class="legend">매초 생활비가 빠져나감 · 마지막 15초 지옥<br>💵 월급 +100만 · 🎁 보너스 +300만 · 🛌 휴식 멘탈+1<br>🏠 월세 -120만 · 📈 물가 -40만<br>🤖 AI 일자리 뺏김 · 📄 경력 3년 신입 → 멘탈-1</div>
   <button class="btn" id="go">탭해서 시작</button>
   <p style="font-size:13px;opacity:.6">좌우로 드래그해서 움직여요</p>
 </div>
@@ -46,6 +54,7 @@ a.home{margin-top:16px;color:#ffb3bb;font-size:13px}
   <button class="btn alt" id="retry">다시 버티기</button>
   <a class="home" href="../../../">다른 미니게임 보기</a>
 </div>
+<div id="vig"></div><div id="noti"><div class="ic" id="nic">📱</div><div style="flex:1"><b id="nfrom"></b><small>지금</small><div class="m" id="nmsg"></div></div></div>
 <div id="toast"></div>
 </div>
 <script>
@@ -58,21 +67,22 @@ const KINDS=[
  {e:'💵',w:34,good:1,f:s=>{s.money+=100;return '+100만'}},
  {e:'🎁',w:4,good:1,f:s=>{s.money+=300;return '보너스 +300만!'}},
  {e:'🛌',w:4,good:1,f:s=>{if(s.mental<3){s.mental++;return '멘탈 회복'}s.money+=20;return '+20만'}},
- {e:'🏠',w:16,f:s=>{s.money=Math.floor(s.money/2);return '월세… 반토막'}},
- {e:'📈',w:20,f:s=>{s.money=Math.max(0,s.money-30);return '물가 -30만'}},
- {e:'🤖',w:11,bad:1,f:s=>{s.mental--;s.why='AI한테 일자리를 뺏겼다';return 'AI가 내 자리를…'}},
- {e:'📄',w:11,bad:1,f:s=>{s.mental--;s.why='신입인데 경력 3년을 요구받았다';return '신입(경력 3년)'}}
+ {e:'🏠',w:16,f:s=>{s.money-=120;noti('🏠','집주인','다음 달부터 월세 10만원 인상합니다 😊');return '월세 -120만'}},
+ {e:'📈',w:20,f:s=>{s.money-=40;noti('💳','카드사','이번 달 결제 예정액 '+(180+Math.floor(Math.random()*90))+'만원입니다');return '물가 -40만'}},
+ {e:'🤖',w:11,bad:1,f:s=>{s.mental--;s.why='AI한테 일자리를 뺏겼다';noti('🤖','인사팀','AI가 당신의 업무를 대체했습니다. 그동안 감사했습니다.');return 'AI가 내 자리를…'}},
+ {e:'📄',w:11,bad:1,f:s=>{s.mental--;s.why='신입인데 경력 3년을 요구받았다';noti('📄','채용알림','[채용] 신입 모집 (경력 3년 이상 필수)');return '신입(경력 3년)'}}
 ];
 const TOT=KINDS.reduce((a,k)=>a+k.w,0);
 function pick(t){let r=Math.random()*(TOT+t*0.6);if(r>=TOT)return KINDS[3+Math.floor(Math.random()*4)];for(const k of KINDS){if((r-=k.w)<0)return k}return KINDS[0]}
 const DUR=45;let S,run=false,last=0,pops=[];
-function reset(){S={money:0,mental:3,t:0,px:W/2,items:[],spawn:0,why:'',best:0};pops=[]}
-function hud(){money.textContent='💰 '+S.money+'만원';time.textContent='⏱ '+Math.max(0,Math.ceil(DUR-S.t));mental.textContent='🧠'.repeat(Math.max(0,S.mental))+'🫥'.repeat(3-Math.max(0,S.mental))}
+function reset(){S={money:300,mental:3,t:0,px:W/2,items:[],spawn:0,why:'',best:0};pops=[]}
+function hud(){money.textContent='💰 '+Math.floor(S.money)+'만원';money.classList.toggle('neg',S.money<0);time.textContent='⏱ '+Math.max(0,Math.ceil(DUR-S.t));mental.textContent='🧠'.repeat(Math.max(0,S.mental))+'🫥'.repeat(3-Math.max(0,S.mental))}
 function start(){reset();resize();S.px=W/2;startEl.classList.add('hide');endEl.classList.add('hide');run=true;last=performance.now();hud();requestAnimationFrame(loop)}
 function loop(now){if(!run)return;const dt=Math.min(.05,(now-last)/1000);last=now;step(dt);draw();if(run)requestAnimationFrame(loop)}
 function step(dt){
- S.t+=dt;const p=S.t/DUR;
- S.spawn-=dt;if(S.spawn<=0){S.spawn=Math.max(.22,.75-p*.5);const k=pick(S.t);S.items.push({k,x:24+Math.random()*(W-48),y:-30,v:(150+p*230)*(0.85+Math.random()*.3)})}
+ S.t+=dt;const p=S.t/DUR,late=S.t>DUR-15;S.money-=dt*(late?18:7);
+ vig.style.opacity=late?.6+.4*Math.sin(S.t*8):0;wrapEl.classList.toggle('shk',late);
+ S.spawn-=dt;if(S.spawn<=0){S.spawn=late?.16:Math.max(.25,.75-p*.5);const k=pick(S.t);S.items.push({k,x:24+Math.random()*(W-48),y:-30,v:(late?520:150+p*230)*(0.85+Math.random()*.3)})}
  const py=H-70;
  for(const it of S.items){it.y+=it.v*dt;if(!it.hit&&Math.abs(it.y-py)<34&&Math.abs(it.x-S.px)<38){it.hit=1;const msg=it.k.f(S);pops.push({x:it.x,y:py-40,txt:msg,good:it.k.good,a:1});if(navigator.vibrate&&!it.k.good)navigator.vibrate(30)}}
  S.items=S.items.filter(i=>!i.hit&&i.y<H+40);
@@ -89,7 +99,16 @@ function draw(){
  X.font='bold 15px sans-serif';
  for(const q of pops){X.globalAlpha=Math.max(0,q.a);X.fillStyle=q.good?'#8dff9e':'#ff8a95';X.fillText(q.txt,q.x,q.y)}X.globalAlpha=1;X.fillStyle='#fff';
 }
+function noti(ic,f,m){nic.textContent=ic;nfrom.textContent=f;nmsg.textContent=m;const n=document.getElementById('noti');n.classList.remove('on');void n.offsetWidth;n.classList.add('on');clearTimeout(noti.t);noti.t=setTimeout(()=>n.classList.remove('on'),1300);if(navigator.vibrate)navigator.vibrate([60,40,60])}
 function rankOf(m,ok){
+ if(!ok)return ['🫠 번아웃 엔딩 (하위 50%)','멘탈이 먼저 퇴사했습니다. 몸은 아직 출근 중.'];
+ if(m>=1000)return ['👑 상위 1% 생존 MZ','이 정도면 재테크 유튜브 하셔야 합니다.'];
+ if(m>=500)return ['🔥 상위 3% 생존 MZ','월세와 물가를 뚫은 당신, 부모님이 자랑스러워합니다.'];
+ if(m>=100)return ['💪 상위 15% 갓생러','통장은 얇아도 멘탈은 두껍다.'];
+ if(m>=0)return ['🙂 상위 40% 그럭저럭 생존','통장 잔고 0원, 그래도 빚은 없다. 대단하다.'];
+ return ['🥲 마이너스 통장 MZ','살아남긴 했는데 카드사가 더 기뻐합니다.'];
+}
+function rankOld(m,ok){
  if(!ok)return ['🫠 번아웃 엔딩','멘탈이 먼저 바사삭. 오늘은 그냥 누워도 됩니다.'];
  if(m>=1500)return ['👑 생존 만렙','이 난이도에서 이 잔고? 비결 좀 공유해 주세요.'];
  if(m>=800)return ['💪 갓생러','월세와 물가를 뚫고 살아남았다.'];
@@ -99,14 +118,15 @@ function rankOf(m,ok){
 function end(ok){run=false;const [r,d]=rankOf(S.money,ok);
  why.textContent=ok?'45초 생존 성공!':(S.why||'멘탈 붕괴')+' (멘탈 0)';
  final.textContent=S.money+'만원';rank.textContent=r;desc.textContent=d;
- S.result={ok,r};endEl.classList.remove('hide');document.title='RESULT '+S.money+' '+r}
+ S.money=Math.floor(S.money);final.textContent=S.money+'만원';final.style.color=S.money<0?'#ff3344':'';vig.style.opacity=0;wrapEl.classList.remove('shk');S.result={ok,r,d};endEl.classList.remove('hide');document.title='RESULT '+S.money+' '+r}
 function toast(t){const e=document.getElementById('toast');e.textContent=t;e.style.opacity=1;setTimeout(()=>e.style.opacity=0,1600)}
 async function share(){
- const text=`MZ 생존 난이도: 헬 🔥 ${S.result.ok?'45초 생존':'번아웃'} · 잔고 ${S.money}만원 · ${S.result.r}\n너는 몇 만원 남기고 버틸 수 있어?`;
+ const text=`MZ 생존 난이도: 헬 🔥 ${S.result.ok?'45초 생존':'번아웃'} · 잔고 ${S.money}만원 · ${S.result.r}\n"${S.result.d}"\n너는 몇 만원 남기고 버틸 수 있어?`;
  if(navigator.share){try{await navigator.share({title:'MZ 생존 난이도: 헬',text,url:URL_PLAY});return}catch(e){if(e&&e.name==='AbortError')return}}
  const full=text+'\n'+URL_PLAY;
  try{await navigator.clipboard.writeText(full);toast('링크를 복사했어요!')}catch(e){const ta=document.createElement('textarea');ta.value=full;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('링크를 복사했어요!')}catch(_){toast('복사 실패: '+URL_PLAY)}ta.remove()}
 }
+const wrapEl=document.getElementById('wrap'),vig=document.getElementById('vig');
 const startEl=document.getElementById('start'),endEl=document.getElementById('end');
 function mv(e){if(!run)return;const r=C.getBoundingClientRect();S.px=Math.max(24,Math.min(W-24,(e.clientX??e.touches[0].clientX)-r.left))}
 C.addEventListener('pointerdown',mv);C.addEventListener('pointermove',mv);
