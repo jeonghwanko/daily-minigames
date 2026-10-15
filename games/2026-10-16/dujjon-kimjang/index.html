@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>두쫀쿠 김장 45초 — 선물 박스 채우기</title>
+<meta name="description" content="두쫀쿠 김장 시즌! 피스타치오 속을 쫀득 반죽 한가운데 떨어뜨려 45초 동안 선물 박스를 채워라">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#2b1a12;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;color:#fff;overflow:hidden;touch-action:manipulation;user-select:none}
+#wrap{position:relative;max-width:480px;height:100%;margin:0 auto;background:linear-gradient(#f6e7d2,#e9cfae)}
+canvas{display:block;width:100%;height:100%}
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;padding:12px 14px;font-weight:800;color:#4a2a17;font-size:18px;pointer-events:none}
+#msg{position:absolute;top:22%;left:0;right:0;text-align:center;font-size:30px;font-weight:900;color:#4a2a17;pointer-events:none;opacity:0;transition:opacity .2s}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:rgba(43,26,18,.88);gap:14px}
+.ov h1{font-size:30px;line-height:1.25}.ov p{font-size:16px;line-height:1.55;color:#f3dcc0}
+.big{font-size:54px;font-weight:900;color:#b5e48c}
+button{font:inherit;font-weight:800;font-size:18px;border:0;border-radius:14px;padding:14px 26px;cursor:pointer}
+.pri{background:#8fcf5f;color:#23330f}.sec{background:#f3dcc0;color:#4a2a17}
+.hide{display:none}
+</style></head><body>
+<div id="wrap"><canvas id="c"></canvas>
+<div id="hud"><span id="sc">0개</span><span id="cb"></span><span id="tm">45</span></div>
+<div id="msg"></div>
+<div id="start" class="ov">
+  <div style="font-size:64px">🍪🥬</div>
+  <h1>두쫀쿠 김장 45초</h1>
+  <p>올해 선물은 손수 만든 두쫀쿠!<br>왔다 갔다 하는 <b>피스타치오 속</b>을<br><b>쫀득 반죽 한가운데</b> 떨어지게 탭하세요.<br>정중앙이면 콤보, 삐져나오면 실패!<br>6개마다 선물 박스 하나 완성 🎁</p>
+  <button class="pri" id="go">탭해서 김장 시작</button>
+</div>
+<div id="end" class="ov hide">
+  <p id="who">결과</p>
+  <div class="big" id="fs">0개</div>
+  <h1 id="rank"></h1>
+  <p id="det"></p>
+  <button class="pri" id="share">결과 공유하기</button>
+  <button class="sec" id="retry">다시 김장하기</button>
+</div></div>
+<script>
+const C=document.getElementById('c'),X=C.getContext('2d'),W=document.getElementById('wrap');
+let w,h,dpr;function rs(){dpr=Math.min(2,devicePixelRatio||1);w=W.clientWidth;h=W.clientHeight;C.width=w*dpr;C.height=h*dpr;X.setTransform(dpr,0,0,dpr,0,0)}addEventListener('resize',rs);rs();
+const $=id=>document.getElementById(id);
+const GIFT=['엄마','할머니','아빠','친구','팀장님','동생','이모','옆집','짝꿍','고모'];
+let st='idle',t0,T=45,score,combo,best,perf,miss,boxes,fx,fy,fdir,spd,drop,dvy,dough,last,parts,shake;
+function reset(){score=0;combo=0;best=0;perf=0;miss=0;boxes=0;spd=150;fx=w/2;fdir=1;drop=false;parts=[];shake=0;newDough()}
+function newDough(){dough={x:w*(0.3+Math.random()*0.4),r:Math.max(30,58-score*0.8)};fy=h*0.22}
+function flash(s,c){const m=$('msg');m.textContent=s;m.style.color=c||'#4a2a17';m.style.opacity=1;clearTimeout(m._t);m._t=setTimeout(()=>m.style.opacity=0,450)}
+function tap(){if(st!=='play'||drop)return;drop=true;dvy=0}
+C.addEventListener('pointerdown',e=>{e.preventDefault();tap()});
+addEventListener('keydown',e=>{if(e.code==='Space')tap()});
+function land(){const dy=h*0.62,d=Math.abs(fx-dough.x),r=dough.r;
+ if(d<r*0.25){combo++;perf++;score++;flash(combo>2?'완벽 쫀득! x'+combo:'완벽 쫀득!','#2f6b12');burst('#8fcf5f',14);if(combo%3==0)T+=1.5}
+ else if(d<r*0.8){combo=0;score++;flash('살짝 삐짐','#8a5a2b');burst('#c79a6b',8)}
+ else{combo=0;miss++;shake=10;flash('카다이프 대참사!','#c0392b');burst('#a7d36f',20)}
+ best=Math.max(best,combo);
+ if(score>0&&score%6==0&&d<r*0.8){boxes++;flash('🎁 '+GIFT[(boxes-1)%GIFT.length]+' 선물 완성!','#b03a2e')}
+ spd=150+score*9;drop=false;newDough()}
+function burst(c,n){for(let i=0;i<n;i++)parts.push({x:fx,y:h*0.62,vx:(Math.random()-.5)*260,vy:-Math.random()*260,l:.7,c})}
+function ball(x,y,r){X.fillStyle='#7cbf4a';X.beginPath();X.arc(x,y,r,0,7);X.fill();X.strokeStyle='#d9b26f';X.lineWidth=2;for(let i=0;i<6;i++){X.beginPath();X.arc(x+Math.cos(i)*r*.3,y+Math.sin(i*2)*r*.3,r*.5,i,i+1.6);X.stroke()}}
+function frame(ts){const dt=Math.min(.05,(ts-(last||ts))/1000);last=ts;
+ if(st==='play'){const el=(ts-t0)/1000,left=Math.max(0,T-el);$('tm').textContent=Math.ceil(left);
+  if(!drop){fx+=fdir*spd*dt;if(fx<30){fx=30;fdir=1}if(fx>w-30){fx=w-30;fdir=-1}}
+  else{dvy+=1800*dt;fy+=dvy*dt;if(fy>=h*0.62)land()}
+  if(left<=0)end()}
+ $('sc').textContent=score+'개 · 🎁'+boxes;$('cb').textContent=combo>1?'콤보 '+combo:'';
+ X.save();if(shake>0){X.translate((Math.random()-.5)*shake,0);shake-=1}
+ X.clearRect(-20,0,w+40,h);
+ X.fillStyle='#c8a27a';X.fillRect(0,h*0.68,w,h);X.fillStyle='#b38b62';for(let i=0;i<w;i+=40)X.fillRect(i,h*0.68,2,h);
+ // dough
+ X.fillStyle='#8a5a3b';X.beginPath();X.ellipse(dough.x,h*0.64,dough.r,dough.r*.42,0,0,7);X.fill();
+ X.fillStyle='#a8714b';X.beginPath();X.ellipse(dough.x,h*0.635,dough.r*.25,dough.r*.1,0,0,7);X.fill();
+ // rail
+ X.strokeStyle='#d9c1a0';X.setLineDash([6,8]);X.beginPath();X.moveTo(20,h*0.22);X.lineTo(w-20,h*0.22);X.stroke();X.setLineDash([]);
+ ball(fx,drop?fy:h*0.22,20);
+ // gift box
+ X.font='800 15px sans-serif';X.fillStyle='#4a2a17';X.textAlign='center';X.fillText('다음 선물 박스 '+(score%6)+'/6',w/2,h*0.8);
+ for(let i=0;i<6;i++){X.fillStyle=i<score%6?'#6b3e26':'rgba(107,62,38,.2)';X.beginPath();X.arc(w/2-75+i*30,h*0.85,11,0,7);X.fill()}
+ parts=parts.filter(p=>(p.l-=dt)>0);parts.forEach(p=>{p.vy+=600*dt;p.x+=p.vx*dt;p.y+=p.vy*dt;X.fillStyle=p.c;X.fillRect(p.x,p.y,4,4)});
+ X.restore();requestAnimationFrame(frame)}
+function rankOf(){if(score>=30)return'🏆 두쫀쿠 김장 명인';if(score>=22)return'🥇 동네 두쫀쿠 공방 사장';if(score>=14)return'🎁 효도 선물 합격';if(score>=7)return'🥲 반은 내가 먹음';return'🧂 카다이프 흩날림 장인'}
+function end(){st='end';$('fs').textContent=score+'개';$('rank').textContent=rankOf();
+ $('det').textContent='선물 박스 '+boxes+'개 · 완벽 '+perf+' · 최고 콤보 '+best+' · 대참사 '+miss;$('end').classList.remove('hide')}
+function start(){reset();$('start').classList.add('hide');$('end').classList.add('hide');T=45;t0=performance.now();st='play'}
+$('go').onclick=start;$('retry').onclick=start;
+$('share').onclick=async()=>{const url=location.href.split('#')[0];
+ const text='두쫀쿠 김장 45초 동안 '+score+'개 빚고 선물 박스 '+boxes+'개 완성! ('+rankOf()+') 너도 해봐 👉 '+url;
+ try{if(navigator.share){await navigator.share({title:'두쫀쿠 김장 45초',text,url});return}}catch(e){if(e.name==='AbortError')return}
+ try{await navigator.clipboard.writeText(text);flash('결과 복사 완료!')}catch(e){prompt('복사해서 공유하세요',text)}};
+reset();requestAnimationFrame(frame);
+</script></body></html>
