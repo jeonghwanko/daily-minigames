@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>제로백 1초, 표정 사수 45초</title>
+<meta name="description" content="하늘을 나는 오픈카가 1초 만에 시속 100km! 6단계 가속 속에서 45초 동안 표정을 지켜라.">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:#0d1530;color:#fff;font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;overflow:hidden;touch-action:manipulation;user-select:none}
+#wrap{position:relative;max-width:480px;height:100%;margin:0 auto}
+canvas{display:block;width:100%;height:100%}
+#hud{position:absolute;top:10px;left:12px;right:12px;display:flex;justify-content:space-between;font-weight:800;font-size:17px;text-shadow:0 2px 4px #0008;pointer-events:none}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:#0d1530e6;gap:14px}
+.hide{display:none}
+h1{font-size:28px;line-height:1.25}
+p{font-size:15px;line-height:1.55;color:#cfd8ff}
+button{border:0;border-radius:14px;padding:14px 22px;font-size:17px;font-weight:800;cursor:pointer;min-width:220px}
+.pri{background:#ff4d6d;color:#fff}.sec{background:#2a3766;color:#fff}
+#big{font-size:46px;font-weight:900;color:#ffd166}
+#toast{position:absolute;left:50%;bottom:30px;transform:translateX(-50%);background:#000c;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:.3s;pointer-events:none}
+</style></head><body>
+<div id="wrap">
+<canvas id="c"></canvas>
+<div id="hud"><span id="score">0점</span><span id="stage">1단계</span><span id="time">45</span></div>
+<div class="ov" id="start">
+  <div style="font-size:60px">🚗💨</div>
+  <h1>제로백 1초,<br>표정 사수 45초</h1>
+  <p>하늘을 나는 오픈카가 1초 만에 시속 100km!<br>가속(G)이 표정을 오른쪽으로 밀어냅니다.<br><b>화면을 연타</b>해서 바늘을 <b style="color:#06d6a0">초록 구간</b>에 붙잡으세요.<br>6단계까지 갈수록 G가 세집니다.</p>
+  <button class="pri" id="go">탭해서 출발</button>
+</div>
+<div class="ov hide" id="end">
+  <div id="face" style="font-size:64px">😐</div>
+  <div id="big">0점</div>
+  <h1 id="title"></h1>
+  <p id="desc"></p>
+  <button class="pri" id="share">결과 공유하기</button>
+  <button class="sec" id="retry">다시 도전</button>
+</div>
+<div id="toast"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const cv=$('c'),cx=cv.getContext('2d');let W,H,DPR;
+function rs(){DPR=Math.min(2,devicePixelRatio||1);W=cv.clientWidth;H=cv.clientHeight;cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0)}
+addEventListener('resize',rs);rs();
+const DUR=45,STAGES=[
+ {n:'1단계',t:'오, 빠르겠다',f:'😀'},{n:'2단계',t:'눈 감고 버티기',f:'😑'},{n:'3단계',t:'어… 잠깐만?',f:'😳'},
+ {n:'4단계',t:'얼굴 붕괴',f:'😵'},{n:'5단계',t:'고개 숙임',f:'🫠'},{n:'6단계',t:'모든 걸 내려놓음',f:'😇'}];
+let st='idle',t0,last,needle,vel,score,hp,stage,gust,gustT,stars=[],clouds=[],taps=0,maxStage;
+for(let i=0;i<60;i++)stars.push({x:Math.random(),y:Math.random(),s:Math.random()*2+.5});
+for(let i=0;i<6;i++)clouds.push({x:Math.random(),y:.15+Math.random()*.5,w:60+Math.random()*80});
+function reset(){needle=.3;vel=0;score=0;hp=100;stage=0;gust=0;gustT=1.5;taps=0;maxStage=0}
+function begin(){reset();$('start').classList.add('hide');$('end').classList.add('hide');st='play';t0=last=performance.now();requestAnimationFrame(loop)}
+function tap(e){if(st!=='play')return;e&&e.preventDefault();vel-=.55;taps++}
+cv.addEventListener('pointerdown',tap);
+addEventListener('keydown',e=>{if(e.code==='Space'){if(st==='play')tap(e);}});
+const ZL=.35,ZR=.6;
+function loop(now){if(st!=='play')return;const dt=Math.min(.05,(now-last)/1000);last=now;const el=(now-t0)/1000;
+ stage=Math.min(5,Math.floor(el/(DUR/6)));maxStage=Math.max(maxStage,stage);
+ const g=.55+stage*.32;gustT-=dt;if(gustT<=0){gust=(.6+Math.random()*.8)*(1+stage*.25);gustT=1.2+Math.random()*1.6-stage*.12}
+ gust*=Math.pow(.25,dt);
+ vel+= (g+gust)*dt; vel*=Math.pow(.18,dt); needle+=vel*dt;
+ if(needle<0){needle=0;vel=Math.abs(vel)*.3}if(needle>1){needle=1;vel=0}
+ const inZ=needle>=ZL&&needle<=ZR;
+ if(inZ)score+=dt*(10+stage*4);else{hp-=dt*(needle>ZR?(needle>.85?28:14):10)}
+ if(hp<=0||el>=DUR){hp=Math.max(0,hp);finish(el>=DUR);return}
+ $('score').textContent=Math.floor(score)+'점';$('stage').textContent=STAGES[stage].n;$('time').textContent=Math.ceil(DUR-el);
+ draw(el,inZ);requestAnimationFrame(loop)}
+function draw(el,inZ){
+ const sky=cx.createLinearGradient(0,0,0,H);sky.addColorStop(0,'#1b2a6b');sky.addColorStop(1,'#ff8fab');cx.fillStyle=sky;cx.fillRect(0,0,W,H);
+ const sp=1+stage*1.6;
+ cx.fillStyle='#fff';stars.forEach(s=>{s.x-=.0015*sp;if(s.x<0)s.x+=1;cx.globalAlpha=.6;cx.fillRect(s.x*W,s.y*H*.5,s.s*(1+stage),s.s)});cx.globalAlpha=1;
+ cx.fillStyle='#ffffffaa';clouds.forEach(c=>{c.x-=.004*sp;if(c.x<-.3)c.x=1.1;const x=c.x*W,y=c.y*H;cx.beginPath();cx.ellipse(x,y,c.w*(1+stage*.15),c.w*.3,0,0,7);cx.fill()});
+ // speed lines
+ cx.strokeStyle='#ffffff55';cx.lineWidth=2;for(let i=0;i<stage*4;i++){const y=Math.random()*H,x=Math.random()*W;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+40+stage*30,y);cx.stroke()}
+ const shake=stage*.8+(needle>ZR?(needle-ZR)*14:0);const ox=(Math.random()-.5)*shake,oy=(Math.random()-.5)*shake;
+ const cxm=W/2+ox,cy=H*.5+oy;
+ // car
+ cx.fillStyle='#ff4d6d';cx.beginPath();cx.roundRect(cxm-120,cy+60,240,56,22);cx.fill();
+ cx.fillStyle='#c9184a';cx.fillRect(cxm-120,cy+92,240,10);
+ cx.fillStyle='#ffd166';cx.beginPath();cx.arc(cxm+110,cy+78,8,0,7);cx.fill();
+ cx.fillStyle='#8ecae6';[-1,1].forEach(s=>{cx.beginPath();cx.ellipse(cxm+s*75,cy+122,26,9,0,0,7);cx.fill()});
+ cx.fillStyle='#ffb703';cx.globalAlpha=.8;cx.beginPath();cx.moveTo(cxm-120,cy+70);cx.lineTo(cxm-170-stage*25-Math.random()*20,cy+88);cx.lineTo(cxm-120,cy+106);cx.fill();cx.globalAlpha=1;
+ // face: deformation by needle
+ const d=needle;const stretch=d>ZR?(d-ZR)/(1-ZR):0;const fx=cxm-10,fy=cy+10;
+ cx.fillStyle='#ffd8a8';cx.beginPath();cx.ellipse(fx-stretch*10,fy,52+stretch*22,56-stretch*8,0,0,7);cx.fill();
+ // hair blown back
+ cx.fillStyle='#3d2c1e';cx.beginPath();cx.ellipse(fx+10-stretch*30,fy-40,48+stretch*30,22,-.15,0,7);cx.fill();
+ for(let i=0;i<3;i++){cx.beginPath();cx.ellipse(fx-50-stretch*40-i*14,fy-38+i*10,16+stretch*20,6,0,0,7);cx.fill()}
+ // eyes
+ cx.fillStyle='#222';const ex=12+stretch*14,eh=d<.2?8:(stretch>.5?2:6);
+ [-1,1].forEach(s=>{cx.beginPath();cx.ellipse(fx+s*20-stretch*12,fy-8,ex*.5,eh,0,0,7);cx.fill()});
+ // cheeks flapping
+ cx.fillStyle='#ffadad';[-1,1].forEach(s=>{cx.beginPath();cx.ellipse(fx+s*32-stretch*22,fy+14,10+stretch*8,6,0,0,7);cx.fill()});
+ // mouth
+ cx.strokeStyle='#7a2a2a';cx.lineWidth=4;cx.beginPath();
+ if(inZ){cx.arc(fx-stretch*10,fy+20,14,.15*Math.PI,.85*Math.PI)}else if(d<ZL){cx.moveTo(fx-12,fy+26);cx.lineTo(fx+12,fy+26)}else{cx.fillStyle='#7a2a2a';cx.ellipse(fx-stretch*18,fy+26,10+stretch*14,4+stretch*10,0,0,7);cx.fill()}
+ cx.stroke();
+ // gauge
+ const gx=24,gy=H-110,gw=W-48,gh=26;
+ cx.fillStyle='#0008';cx.beginPath();cx.roundRect(gx-6,gy-34,gw+12,gh+70,12);cx.fill();
+ cx.fillStyle='#ffffff22';cx.fillRect(gx,gy,gw,gh);
+ cx.fillStyle='#06d6a0';cx.fillRect(gx+gw*ZL,gy,gw*(ZR-ZL),gh);
+ cx.fillStyle='#ef476f88';cx.fillRect(gx+gw*.85,gy,gw*.15,gh);
+ cx.fillStyle='#fff';cx.fillRect(gx+gw*needle-3,gy-6,6,gh+12);
+ cx.font='bold 13px sans-serif';cx.textAlign='left';cx.fillText('평온',gx,gy-12);cx.textAlign='right';cx.fillText('얼굴 붕괴',gx+gw,gy-12);
+ cx.textAlign='center';cx.fillStyle='#ffd166';cx.font='bold 15px sans-serif';cx.fillText(STAGES[stage].t+'  ·  시속 '+Math.min(999,Math.floor(100+el*18+stage*40))+'km',W/2,gy-12);
+ // hp
+ cx.fillStyle='#ffffff33';cx.fillRect(gx,gy+gh+12,gw,10);cx.fillStyle=hp>40?'#ffd166':'#ef476f';cx.fillRect(gx,gy+gh+12,gw*hp/100,10);
+ cx.fillStyle='#fff';cx.font='12px sans-serif';cx.textAlign='left';cx.fillText('멘탈',gx,gy+gh+38);
+}
+function finish(full){st='end';const s=Math.floor(score);const sg=full?6:maxStage+1;const S=STAGES[Math.min(5,sg-1)];
+ $('face').textContent=full?'😎':S.f;$('big').textContent=s+'점';
+ $('title').textContent=full?'45초 완주! 강철 표정 인증':sg+'단계에서 '+S.t;
+ $('desc').textContent=full?'6단계 가속에도 표정을 지켰어요. 연타 '+taps+'번.':'멘탈이 바닥났어요. 연타 '+taps+'번. 다시 버텨볼까요?';
+ $('end').classList.remove('hide');window._res={s,sg,full}}
+function flash(m){const t=$('toast');t.textContent=m;t.style.opacity=1;setTimeout(()=>t.style.opacity=0,1600)}
+$('go').onclick=begin;$('retry').onclick=begin;
+$('share').onclick=async()=>{const url=location.href.split('#')[0];const r=window._res||{s:0,sg:1};
+ const text=`🚗💨 제로백 1초, 표정 사수 45초\n${r.full?'6단계 완주':r.sg+'단계'} · ${r.s}점! 너는 몇 단계까지 버틸 수 있어?\n${url}`;
+ try{if(navigator.share){await navigator.share({title:'제로백 1초, 표정 사수 45초',text,url});return}}catch(e){if(e.name==='AbortError')return}
+ try{await navigator.clipboard.writeText(text);flash('결과 복사 완료!')}catch(e){prompt('복사해서 공유하세요',text)}};
+reset();draw(0,true);
+</script></body></html>
