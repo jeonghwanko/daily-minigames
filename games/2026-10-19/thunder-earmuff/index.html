@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>번쩍! 쾅 전에 귀 막기 45초</title>
+<meta name="description" content="천둥번개 치는 밤, 번개가 번쩍하면 천둥이 오기 직전에 귀를 막아라! 가짜 번쩍엔 속지 말기.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
+html,body{height:100%;background:#0b1020;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;overflow:hidden;touch-action:manipulation}
+#wrap{position:relative;max-width:480px;height:100%;margin:0 auto;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:12px 14px;font-weight:800;font-size:18px;pointer-events:none;text-shadow:0 2px 4px #000}
+.ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;background:rgba(8,12,28,.86);gap:14px}
+.hide{display:none!important}
+h1{font-size:30px;line-height:1.25}
+p{font-size:15px;line-height:1.6;color:#cfd6ee}
+.big{font-size:56px;font-weight:900;color:#ffe066}
+button{font:inherit;font-weight:800;font-size:18px;border:0;border-radius:14px;padding:14px 26px;cursor:pointer}
+.pri{background:#ffe066;color:#1b1b2f}
+.sec{background:#2e3658;color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+#toast{position:absolute;left:50%;top:22%;transform:translateX(-50%);font-size:30px;font-weight:900;pointer-events:none;text-shadow:0 3px 6px #000;white-space:nowrap}
+small{color:#8f99bd;font-size:12px}
+</style>
+</head>
+<body>
+<div id="wrap">
+<canvas id="c"></canvas>
+<div id="hud"><span id="hs">0점</span><span id="hl">💛💛💛</span><span id="ht">45.0</span></div>
+<div id="toast"></div>
+<div id="start" class="ov">
+  <div style="font-size:64px">⚡🙉</div>
+  <h1>번쩍! 쾅 전에<br>귀 막기 45초</h1>
+  <p>밖에 천둥번개가 미친듯이 친다…<br><b>번개가 번쩍</b>하면 천둥 파동이 다가와요.<br>파동이 <b style="color:#ffe066">노란 원</b>에 닿는 순간 화면을 탭해 귀를 막으세요!<br>📸 카메라 플래시, 🚗 헤드라이트 같은<br><b style="color:#ff8a8a">가짜 번쩍</b>엔 탭하면 안 돼요.</p>
+  <button class="pri" id="bStart">탭해서 시작</button>
+  <small>소리를 켜면 더 깜짝 놀랍니다 🔊</small>
+</div>
+<div id="end" class="ov hide">
+  <div style="font-size:52px" id="eEmoji">🙉</div>
+  <h1 id="eTitle"></h1>
+  <div class="big" id="eScore">0</div>
+  <p id="eDetail"></p>
+  <div class="row"><button class="pri" id="bShare">결과 공유</button><button class="sec" id="bRetry">다시 하기</button></div>
+  <small>오리지널 미니게임 · 천둥번개 치던 밤에</small>
+</div>
+</div>
+<script>
+const cv=document.getElementById('c'),cx=cv.getContext('2d');
+let W,H,DPR;
+function rs(){DPR=Math.min(2,window.devicePixelRatio||1);const r=cv.getBoundingClientRect();W=r.width;H=r.height;cv.width=W*DPR;cv.height=H*DPR;cx.setTransform(DPR,0,0,DPR,0,0)}
+addEventListener('resize',rs);rs();
+const $=id=>document.getElementById(id);
+const DUR=45;
+let st='idle',t0=0,now=0,score=0,lives=3,combo=0,best=0,perfect=0,good=0,scared=0,fooled=0;
+let events=[],nextSpawn=0,flash=0,flashCol='255,255,255',bolt=null,shake=0,cover=0,toastT=0,rain=[];
+for(let i=0;i<90;i++)rain.push({x:Math.random(),y:Math.random(),v:.6+Math.random()*.6});
+let AC=null;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume()}
+function thunder(loud){if(!AC)return;const d=1.6,n=AC.sampleRate*d,b=AC.createBuffer(1,n,AC.sampleRate),a=b.getChannelData(0);let l=0;for(let i=0;i<n;i++){l=(l+.02*(Math.random()*2-1))/1.02;a[i]=l*3.5*Math.pow(1-i/n,2)}const s=AC.createBufferSource();s.buffer=b;const f=AC.createBiquadFilter();f.type='lowpass';f.frequency.value=loud?500:180;const g=AC.createGain();g.gain.value=loud?1.4:.35;s.connect(f);f.connect(g);g.connect(AC.destination);s.start()}
+function beep(fr,du,ty){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=ty||'sine';o.frequency.value=fr;g.gain.setValueAtTime(.18,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+du);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+du)}
+function vib(p){try{navigator.vibrate&&navigator.vibrate(p)}catch(e){}}
+function toast(s,c){const e=$('toast');e.textContent=s;e.style.color=c||'#fff';toastT=now}
+function mkBolt(){const pts=[];let x=W*(.15+Math.random()*.7),y=H*.08;pts.push([x,y]);while(y<H*.5){x+=(Math.random()-.5)*40;y+=18+Math.random()*22;pts.push([x,y])}return pts}
+function stage(){return Math.min(5,Math.floor((now-t0)/9000))}
+function spawn(){
+  const s=stage();
+  const fake=Math.random()<.22+s*.04;
+  if(fake){const k=Math.random()<.5?'cam':'car';events.push({type:'fake',k,at:now,end:now+500});flash=k==='cam'?.9:.6;flashCol=k==='cam'?'255,255,255':'255,236,170';bolt=null;beep(k==='cam'?1800:300,.08,'square')}
+  else{const delay=1500-s*170+Math.random()*500;events.push({type:'real',at:now,hit:now+delay,done:false});flash=1;flashCol='220,230,255';bolt=mkBolt();
+    if(s>=3&&Math.random()<.35){const d2=delay+380+Math.random()*250;events.push({type:'real',at:now,hit:now+d2,done:false,second:true})}}
+  nextSpawn=now+Math.max(900,2300-s*280)+Math.random()*700;
+}
+function start(){ac();$('start').classList.add('hide');$('end').classList.add('hide');st='play';t0=performance.now();now=t0;score=0;lives=3;combo=0;best=0;perfect=0;good=0;scared=0;fooled=0;events=[];nextSpawn=t0+1000;flash=0;bolt=null;$('toast').textContent='';hud()}
+function hud(){$('hs').textContent=score+'점';$('hl').textContent='💛'.repeat(Math.max(0,lives))+'🖤'.repeat(3-Math.max(0,lives));$('ht').textContent=Math.max(0,DUR-(now-t0)/1000).toFixed(1)}
+function tap(){
+  if(st!=='play')return;ac();cover=now;
+  const pend=events.filter(e=>e.type==='real'&&!e.done).sort((a,b)=>a.hit-b.hit)[0];
+  const fk=events.find(e=>e.type==='fake'&&now<e.end);
+  if(pend){const dt=pend.hit-now;
+    if(dt<=170&&dt>=-60){pend.done=true;combo++;best=Math.max(best,combo);perfect++;score+=100+combo*10;toast('완벽 차단! 🙉','#ffe066');beep(880,.08);thunder(false);return}
+    if(dt<=420&&dt>170){pend.done=true;combo++;best=Math.max(best,combo);good++;score+=50+combo*5;toast('막았다 👍','#9ef0a6');thunder(false);return}
+    if(dt>420&&!fk){score=Math.max(0,score-20);combo=0;toast('너무 일러요!','#ffb36b');return}
+  }
+  if(fk&&!fk.tapped){fk.tapped=true;fooled++;combo=0;lives--;toast(fk.k==='cam'?'📸 찰칵… 셀카 플래시였다':'🚗 헤드라이트였다','#ff8a8a');vib(80);if(lives<=0)end();hud();return}
+  score=Math.max(0,score-10);combo=0;toast('조용한데요…?','#aab')
+}
+function end(){st='end';const r=score;let ti,em;
+  if(r>=2000){ti='천둥 마스터 ⚡';em='😎'}else if(r>=1200){ti='귀 막기 장인';em='🙉'}else if(r>=600){ti='움찔하는 편';em='😬'}else{ti='매번 깜짝 놀람';em='🙀'}
+  $('eEmoji').textContent=em;$('eTitle').textContent=ti;$('eScore').textContent=r+'점';
+  $('eDetail').innerHTML=`완벽 ${perfect} · 막음 ${good} · 깜짝 ${scared} · 가짜에 속음 ${fooled}<br>최고 콤보 ${best}`;
+  $('end').classList.remove('hide')}
+function share(){const url='https://jeonghwanko.github.io/daily-minigames/games/2026-10-19/thunder-earmuff/';
+  const text=`⚡ 천둥번개 치는 밤, 쾅 전에 귀 막기 ${score}점! (${$('eTitle').textContent}) 너도 해봐 👉`;
+  if(navigator.share){navigator.share({title:'번쩍! 쾅 전에 귀 막기',text,url}).catch(()=>{})}
+  else{const s=text+' '+url;(navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(()=>toast('링크 복사 완료!','#9ef0a6')).catch(()=>{prompt('복사해서 공유하세요',s)})}}
+$('bStart').onclick=e=>{e.stopPropagation();start()};
+$('bRetry').onclick=e=>{e.stopPropagation();start()};
+$('bShare').onclick=e=>{e.stopPropagation();share()};
+cv.addEventListener('pointerdown',e=>{e.preventDefault();tap()});
+addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();st==='play'?tap():start()}});
+function loop(ts){now=ts;
+  if(st==='play'){
+    if(now>=nextSpawn)spawn();
+    for(const e of events){if(e.type==='real'&&!e.done&&now>e.hit+60){e.done=true;lives--;combo=0;scared++;shake=now;thunder(true);vib([60,40,120]);toast('으악 깜짝이야! 💥','#ff6b6b');if(lives<=0)end()}}
+    events=events.filter(e=>e.type==='real'?!e.done||now<e.hit+400:now<e.end+200);
+    if(now-t0>=DUR*1000)end();hud()}
+  draw();requestAnimationFrame(loop)}
+function draw(){
+  const sx=(now-shake<300)?(Math.random()-.5)*14:0;cx.save();cx.translate(sx,0);
+  const g=cx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#141a38');g.addColorStop(1,'#0a0d1c');cx.fillStyle=g;cx.fillRect(-20,0,W+40,H);
+  // window
+  const wx=W*.1,wy=H*.1,ww=W*.8,wh=H*.42;cx.fillStyle='#1d2752';cx.fillRect(wx,wy,ww,wh);
+  if(bolt&&flash>.2){cx.strokeStyle=`rgba(240,245,255,${flash})`;cx.lineWidth=4;cx.beginPath();bolt.forEach((p,i)=>i?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]));cx.stroke()}
+  cx.strokeStyle='rgba(160,180,255,.35)';cx.lineWidth=1.5;for(const r of rain){r.y+=r.v*.02;if(r.y>1)r.y=0;const x=wx+r.x*ww,y=wy+r.y*wh;cx.beginPath();cx.moveTo(x,y);cx.lineTo(x-3,y+12);cx.stroke()}
+  cx.strokeStyle='#5a4632';cx.lineWidth=10;cx.strokeRect(wx,wy,ww,wh);cx.beginPath();cx.moveTo(W/2,wy);cx.lineTo(W/2,wy+wh);cx.stroke();
+  // fake source icons
+  for(const e of events){if(e.type==='fake'&&now<e.end){cx.font='54px serif';cx.textAlign='center';cx.fillText(e.k==='cam'?'📸':'🚗',W*.5,wy+wh*.65)}}
+  // character
+  const cy=H*.72,covered=now-cover<350;cx.font=`${Math.min(110,W*.26)}px serif`;cx.textAlign='center';cx.textBaseline='middle';
+  const anyScared=now-shake<600;cx.fillText(anyScared?'🙀':covered?'🙉':'🙂',W/2,cy);
+  // target ring + incoming waves
+  const R=Math.min(W,H)*.17;cx.lineWidth=6;cx.strokeStyle='rgba(255,224,102,.9)';cx.beginPath();cx.arc(W/2,cy,R,0,7);cx.stroke();
+  for(const e of events){if(e.type==='real'&&!e.done){const span=e.hit-e.at,k=Math.max(0,(e.hit-now)/span);const rr=R+k*Math.max(W,H)*.7;cx.strokeStyle=e.second?'rgba(255,140,200,.85)':'rgba(140,200,255,.85)';cx.lineWidth=5;cx.beginPath();cx.arc(W/2,cy,rr,0,7);cx.stroke()}}
+  cx.restore();
+  if(flash>0){cx.fillStyle=`rgba(${flashCol},${flash*.75})`;cx.fillRect(0,0,W,H);flash*=.88;if(flash<.01)flash=0}
+  if(now-toastT>700)$('toast').textContent='';
+  if(st==='play'){cx.fillStyle='rgba(255,255,255,.55)';cx.font='14px sans-serif';cx.textAlign='center';cx.fillText('파동이 노란 원에 닿을 때 탭!',W/2,H-24)}
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
