@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>10월 모의고사 OMR 45초</title>
+<meta name="description" content="10월 모의고사 날! 45초 동안 문제 풀고 OMR 마킹, 졸음 문항은 찍어서 찍신 강림까지. 너는 몇 등급?">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{height:100%;background:#2b3a55;font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;color:#222;overflow:hidden}
+#app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;padding:10px 12px 14px;gap:10px}
+#hud{display:flex;justify-content:space-between;align-items:center;color:#fff;font-weight:800;font-size:15px}
+#hud .t{font-size:22px;font-variant-numeric:tabular-nums}
+#hud .t.hot{color:#ff6b6b;animation:pulse .5s infinite alternate}
+@keyframes pulse{to{transform:scale(1.15)}}
+#bar{height:8px;background:#ffffff33;border-radius:9px;overflow:hidden}
+#bar i{display:block;height:100%;width:100%;background:#ffd166;transition:width .1s linear}
+#paper{flex:1;background:#fffdf5;border-radius:14px;box-shadow:0 6px 0 #0003;padding:16px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+#paper .hd{display:flex;justify-content:space-between;font-size:12px;color:#888;border-bottom:2px solid #222;padding-bottom:6px;margin-bottom:12px}
+#qn{font-weight:900;font-size:16px;margin-bottom:6px}
+#qt{font-size:22px;font-weight:700;line-height:1.4;min-height:62px;word-break:keep-all}
+#qt.big{font-size:34px;letter-spacing:4px}
+#qt.sleep{filter:blur(6px)}
+#ch{margin-top:10px;display:flex;flex-direction:column;gap:6px;font-size:19px}
+#ch div{padding:4px 2px}
+#ch.sleep{filter:blur(5px)}
+#zz{position:absolute;inset:auto 0 12px 0;text-align:center;font-weight:900;color:#7a5cff;font-size:17px;display:none}
+#omr{background:#ffe3e3;border:3px solid #e03131;border-radius:12px;padding:10px 8px 12px}
+#omr .lb{font-size:12px;color:#c92a2a;font-weight:800;margin-bottom:6px;text-align:center}
+#bub{display:flex;justify-content:space-between;gap:6px}
+.b{flex:1;aspect-ratio:1/1.35;border:3px solid #e03131;border-radius:50%/40%;background:#fff;color:#e03131;font-size:24px;font-weight:900;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .08s}
+.b:active{transform:scale(.92)}
+.b.fill{background:#111;color:#111;border-color:#111}
+.b.ok{background:#2f9e44;border-color:#2f9e44;color:#fff}
+#fx{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);font-size:30px;font-weight:900;pointer-events:none;opacity:0;white-space:nowrap;text-shadow:0 2px 0 #fff,0 0 12px #fff}
+#fx.on{animation:pop .8s ease-out}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
+.ov{position:fixed;inset:0;background:#2b3a55f2;display:flex;align-items:center;justify-content:center;z-index:9;padding:20px}
+.card{background:#fffdf5;border-radius:18px;max-width:420px;width:100%;padding:24px 20px;text-align:center;box-shadow:0 8px 0 #0004}
+.card h1{font-size:26px;line-height:1.3;margin-bottom:10px}
+.card p{font-size:15px;line-height:1.6;color:#444;margin-bottom:8px;word-break:keep-all}
+.card .grade{font-size:64px;font-weight:900;color:#e03131;line-height:1.1;margin:6px 0}
+.card .st{display:flex;justify-content:center;gap:14px;font-size:14px;color:#555;margin:8px 0 14px;flex-wrap:wrap}
+.btn{display:block;width:100%;border:0;border-radius:12px;padding:15px;font-size:18px;font-weight:900;margin-top:10px;cursor:pointer}
+.p{background:#e03131;color:#fff}.s{background:#e9ecef;color:#222}
+.hide{display:none!important}
+#toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:20px;font-size:14px;opacity:0;transition:opacity .3s;z-index:20}
+.shake{animation:sh .3s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud"><span>📝 <b id="sc">0</b>점</span><span id="cb"></span><span class="t" id="tm">45.0</span></div>
+  <div id="bar"><i id="bi"></i></div>
+  <div id="paper">
+    <div class="hd"><span>10월 OMR 연습 · 게임 영역</span><span>홀수형</span></div>
+    <div id="qn">1.</div>
+    <div id="qt"></div>
+    <div id="ch"></div>
+    <div id="zz">💤 졸음이 몰려온다… 글씨가 안 보여! 아무거나 찍어!</div>
+  </div>
+  <div id="omr"><div class="lb">답안지 · 컴퓨터용 사인펜으로 마킹</div><div id="bub"></div></div>
+</div>
+<div id="fx"></div>
+<div id="toast"></div>
+
+<div class="ov" id="start"><div class="card">
+  <h1>📝 10월 모의고사<br>OMR 45초</h1>
+  <p>오늘은 모의고사 날! 문제를 보고 <b>답 번호를 OMR에 마킹</b>하세요.</p>
+  <p>맞히면 점수와 콤보, 틀리면 <b>3초 감점</b>. 💤 졸음 문항은 글씨가 안 보이니 <b>찍기</b>! 찍신이 강림하면 보너스.</p>
+  <p>⏰ 종 치기 10초 전부터는 점수 2배!</p>
+  <button class="btn p" id="bStart">탭해서 시험 시작</button>
+</div></div>
+
+<div class="ov hide" id="end"><div class="card">
+  <h1 id="eT">시험 종료! 🔔</h1>
+  <div class="grade" id="eG">3등급</div>
+  <p id="eM"></p>
+  <div class="st"><span>원점수 <b id="eS">0</b></span><span>정답 <b id="eC">0</b></span><span>찍신 <b id="eL">0</b></span><span>최고콤보 <b id="eX">0</b></span></div>
+  <button class="btn p" id="bShare">결과 공유하기</button>
+  <button class="btn s" id="bRetry">재시험 보기</button>
+</div></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const Q=new URLSearchParams(location.search);const TEST=Q.has('test');
+const DUR=TEST?4:45;const NUMS=['①','②','③','④','⑤'];
+let st,score,combo,maxCombo,correct,lucky,qi,cur,run=false,lock=false,raf;
+const bub=$('bub');
+NUMS.forEach((n,i)=>{const b=document.createElement('div');b.className='b';b.textContent=n;b.onpointerdown=e=>{e.preventDefault();pick(i)};bub.appendChild(b)});
+const R=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+const shuf=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+function opts(ans){const s=new Set([ans]);let g=0;while(s.size<5&&g<99){g++;const d=R(-6,6);if(d&&ans+d>=0)s.add(ans+d)}let k=1;while(s.size<5)s.add(ans+10*k++);return shuf([...s])}
+const PAIRS=[['🍎','🍏'],['🐱','🐯'],['🌕','🌝'],['🙂','🙃'],['⭐','🌟'],['🍩','🍪'],['🐶','🐺'],['✏️','🖊️'],['🔴','🟠'],['🐻','🐨']];
+const WORDS=[['가을','fall'],['시험','test'],['연필','pencil'],['정답','answer'],['학교','school'],['점심','lunch'],['친구','friend'],['시간','time'],['문제','question'],['종','bell']];
+function makeQ(){
+  if(qi>1&&Math.random()<.16)return{type:'sleep',ans:R(0,4)};
+  const k=R(0,4);let text,choices,ans,big=false;
+  if(k===0){const a=R(3,19),b=R(2,15);const op=R(0,2);const v=op===0?a+b:op===1?a*Math.min(b,9):Math.max(a,b)-Math.min(a,b);
+    text=op===0?`${a} + ${b} = ?`:op===1?`${a} × ${Math.min(b,9)} = ?`:`${Math.max(a,b)} − ${Math.min(a,b)} = ?`;choices=opts(v);ans=choices.indexOf(v)}
+  else if(k===1){const s=R(1,9),d=R(2,7);const seq=[0,1,2,3].map(i=>s+d*i);const v=s+d*4;text=`${seq.join(', ')}, ? 다음 수는?`;choices=opts(v);ans=choices.indexOf(v)}
+  else if(k===2){const p=PAIRS[R(0,PAIRS.length-1)];ans=R(0,4);choices=NUMS.map((_,i)=>i===ans?p[1]:p[0]);text='다음 중 <u>다른 하나</u>는?';return{type:'emoji',text,choices,ans}}
+  else if(k===3){const w=shuf(WORDS.slice());const t=w[0];const c=shuf(w.slice(0,5));ans=c.indexOf(t);text=`'${t[0]}'의 영어 단어는?`;choices=c.map(x=>x[1])}
+  else{const n=R(2,5);const items=shuf(['🍎','🍙','🥛','🍌','🧃','🍪']).slice(0,1)[0];const cnt=R(2,7);text=`${items.repeat(cnt)}<br>몇 개일까?`;choices=opts(cnt).map(x=>x);ans=choices.indexOf(cnt);big=false}
+  return{type:'n',text,choices,ans,big}
+}
+function show(){
+  cur=makeQ();qi++;$('qn').textContent=qi+'.';
+  const sl=cur.type==='sleep';
+  $('qt').className=sl?'sleep':(cur.type==='emoji'?'':'');
+  $('ch').className=sl?'sleep':'';$('zz').style.display=sl?'block':'none';
+  if(sl){$('qt').textContent='다음 글을 읽고 물음에 답하시오. 윗글의 내용과 일치하는 것은?';$('ch').innerHTML=NUMS.map(n=>`<div>${n} 무슨 말인지 하나도 모르겠다</div>`).join('')}
+  else{$('qt').innerHTML=cur.text;
+    $('ch').innerHTML=cur.type==='emoji'?`<div style="font-size:34px;letter-spacing:6px;text-align:center">${cur.choices.map((c,i)=>`<span style="display:inline-block;text-align:center">${c}<br><small style="font-size:14px">${NUMS[i]}</small></span>`).join(' ')}</div>`
+      :cur.choices.map((c,i)=>`<div>${NUMS[i]} ${c}</div>`).join('')}
+  [...bub.children].forEach(b=>b.className='b');lock=false;
+}
+function fx(t,c){const f=$('fx');f.textContent=t;f.style.color=c;f.classList.remove('on');void f.offsetWidth;f.classList.add('on')}
+function left(){return Math.max(0,DUR-(performance.now()-st)/1000)}
+function pick(i){
+  if(!run||lock)return;lock=true;const b=bub.children[i];b.classList.add('fill');
+  const dbl=left()<=10?2:1;
+  if(cur.type==='sleep'){
+    if(i===cur.ans){lucky++;correct++;combo++;const g=15*dbl;score+=g;fx('🙏 찍신 강림! +'+g,'#7a5cff');b.classList.add('ok')}
+    else{fx('찍었는데… 아깝다','#868e96')}
+  }else if(i===cur.ans){correct++;combo++;const g=(10+Math.min(combo-1,5)*2)*dbl;score+=g;b.classList.add('ok');fx((combo>2?combo+'콤보! ':'정답 ')+'+'+g+(dbl>1?' ×2':''),'#2f9e44')}
+  else{combo=0;st-=3000;fx('땡! 수정테이프… −3초','#e03131');$('paper').classList.remove('shake');void $('paper').offsetWidth;$('paper').classList.add('shake');bub.children[cur.ans].classList.add('ok')}
+  maxCombo=Math.max(maxCombo,combo);hud();setTimeout(()=>{if(run)show()},cur.type==='sleep'||i!==cur.ans?380:160);
+}
+function hud(){$('sc').textContent=score;$('cb').textContent=combo>1?'🔥'+combo+'콤보':''}
+function loop(){const l=left();$('tm').textContent=l.toFixed(1);$('tm').className='t'+(l<=10?' hot':'');$('bi').style.width=(l/DUR*100)+'%';
+  if(TEST&&!lock&&Math.random()<.2)pick(cur.ans);
+  if(l<=0)return end();raf=requestAnimationFrame(loop)}
+function begin(){score=0;combo=0;maxCombo=0;correct=0;lucky=0;qi=0;run=true;$('start').classList.add('hide');$('end').classList.add('hide');hud();show();st=performance.now();beep(880,.15);cancelAnimationFrame(raf);loop()}
+const CUT=[[400,1],[320,2],[250,3],[190,4],[140,5],[100,6],[60,7],[30,8],[-1e9,9]];
+const MSG={1:'만점 각! 수능도 이 기세로 가자 🎉',2:'아깝다 1등급 컷! 실수 하나만 줄이자',3:'안정권 3등급. 콤보만 더 이으면 된다',4:'딱 중간! 찍신의 가호가 조금 부족했다',5:'오늘의 내가 수능날의 나를 만든다…',6:'OMR 마킹이 문제를 따라가지 못했다',7:'졸음 문항에서 다 찍었구나?',8:'시험지에 낙서만 하다 종 쳤다',9:'혹시 엎드려 자고 있었나요? 💤'};
+let lastG=9;
+function end(){run=false;cancelAnimationFrame(raf);$('tm').textContent='0.0';beep(660,.4);
+  const g=CUT.find(c=>score>=c[0])[1];lastG=g;$('eG').textContent=g+'등급';$('eM').textContent=MSG[g];
+  $('eS').textContent=score;$('eC').textContent=correct;$('eL').textContent=lucky;$('eX').textContent=maxCombo;
+  setTimeout(()=>$('end').classList.remove('hide'),350)}
+let ac;function beep(f,d){try{ac=ac||new (window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.frequency.value=f;o.type='sine';g.gain.setValueAtTime(.15,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch(e){}}
+function toast(t){const e=$('toast');e.textContent=t;e.style.opacity=1;setTimeout(()=>e.style.opacity=0,1600)}
+function share(){const url='https://jeonghwanko.github.io/daily-minigames/games/2026-10-20/omr-mock-exam/';
+  const text=`📝 10월 모의고사 OMR 45초, 나는 ${lastG}등급(원점수 ${score}점, 찍신 ${lucky}번)! 너도 풀어봐`;
+  if(navigator.share){navigator.share({title:'10월 모의고사 OMR 45초',text,url}).catch(()=>{})}
+  else{const s=text+' '+url;(navigator.clipboard?navigator.clipboard.writeText(s):Promise.reject()).then(()=>toast('링크 복사 완료!')).catch(()=>{prompt('복사해서 공유하세요',s)})}}
+$('bStart').onclick=begin;$('bRetry').onclick=begin;$('bShare').onclick=share;
+if(TEST)setTimeout(begin,200);
+</script>
+</body>
+</html>
